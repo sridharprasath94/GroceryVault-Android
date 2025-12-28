@@ -1,0 +1,435 @@
+Milk
+Skim Milk
+Whole Milk
+Almond Milk
+Soy Milk
+Oat Milk
+Butter
+Ghee
+Yogurt
+Greek Yogurt
+Curd
+Cheddar Cheese
+Mozzarella
+Parmesan
+Paneer
+Cream
+Sour Cream
+Egg
+Eggs
+Tofu
+Tempeh
+Chicken
+Chicken Breast
+Chicken Thighs
+Turkey
+Beef
+Pork
+Bacon
+Sausage
+Ham
+Fish
+Salmon
+Tuna
+Shrimp
+Prawns
+Crab
+Mutton
+Lamb
+Onion
+Red Onion
+White Onion
+Spring Onion
+Shallot
+Garlic
+Ginger
+Green Chili
+Red Chili
+Jalapeno
+Bell Pepper
+Red Bell Pepper
+Green Bell Pepper
+Yellow Bell Pepper
+Tomato
+Cherry Tomato
+Plum Tomato
+Sun-dried Tomato
+Potato
+Baby Potato
+Sweet Potato
+Carrot
+Beetroot
+Radish
+Turnip
+Cucumber
+Zucchini
+Eggplant
+Brinjal
+Okra
+Cauliflower
+Cabbage
+Red Cabbage
+Broccoli
+Brussels Sprouts
+Spinach
+Baby Spinach
+Kale
+Lettuce
+Romaine
+Iceberg Lettuce
+Arugula
+Methi Leaves
+Fenugreek Leaves
+Coriander
+Coriander Leaves
+Cilantro
+Mint
+Basil
+Thai Basil
+Parsley
+Oregano
+Rosemary
+Thyme
+Dill
+Sage
+Curry Leaves
+Mushroom
+Button Mushroom
+Shiitake
+Oyster Mushroom
+Corn
+Baby Corn
+Green Beans
+French Beans
+Peas
+Snow Peas
+Chickpeas
+Black Chickpeas
+Kidney Beans
+Rajma
+Black Beans
+White Beans
+Lentils
+Toor Dal
+Moong Dal
+Masoor Dal
+Chana Dal
+Urad Dal
+Split Peas
+Basmati Rice
+Jasmine Rice
+Brown Rice
+Sona Masuri
+Quinoa
+Oats
+Rolled Oats
+Barley
+Millet
+Ragi
+Sooji
+Semolina
+Wheat Flour
+Atta
+All-purpose Flour
+Maida
+Bread
+Whole Wheat Bread
+Brown Bread
+Baguette
+Tortilla
+Pita
+Naan
+Pasta
+Spaghetti
+Penne
+Macaroni
+Noodles
+Ramen
+Vermicelli
+Soba
+Udon
+Rice Noodles
+Couscous
+Bulgur
+Cereal
+Cornflakes
+Granola
+Sugar
+Brown Sugar
+Jaggery
+Honey
+Maple Syrup
+Salt
+Sea Salt
+Rock Salt
+Black Salt
+Black Pepper
+White Pepper
+Cumin Seeds
+Cumin Powder
+Coriander Seeds
+Coriander Powder
+Turmeric Powder
+Red Chili Powder
+Kashmiri Chili Powder
+Paprika
+Garam Masala
+Chaat Masala
+Curry Powder
+Sambar Powder
+Rasam Powder
+Biryani Masala
+Italian Seasoning
+Five Spice
+Cinnamon
+Cloves
+Cardamom
+Bay Leaf
+Star Anise
+Nutmeg
+Mace
+Fennel Seeds
+Fenugreek Seeds
+Mustard Seeds
+Nigella Seeds
+Asafoetida
+Hing
+Sesame Seeds
+Sunflower Seeds
+Pumpkin Seeds
+Chia Seeds
+Flax Seeds
+Cashews
+Almonds
+Walnuts
+Peanuts
+Pistachios
+Raisins
+Dates
+Apricots
+Coconut
+Grated Coconut
+Coconut Milk
+Coconut Water
+Apple
+Green Apple
+Banana
+Mango
+Raw Mango
+Orange
+Lemon
+Lime
+Grapes
+Red Grapes
+Strawberries
+Blueberries
+Raspberries
+Pomegranate
+Watermelon
+Pineapple
+Papaya
+Avocado
+Peach
+Pear
+Kiwi
+Guava
+Chikoo
+Jackfruit
+Tamarind
+Tamarind Paste
+Tomato Paste
+Tomato Ketchup
+Mayonnaise
+Mustard
+Dijon Mustard
+Soy Sauce
+Dark Soy Sauce
+Light Soy Sauce
+Oyster Sauce
+Hoisin Sauce
+Fish Sauce
+Chili Sauce
+Chili Garlic Sauce
+Sriracha
+Vinegar
+Apple Cider Vinegar
+Balsamic Vinegar
+Rice Vinegar
+Lemon Juice
+Lime Juice
+Olive Oil
+Extra Virgin Olive Oil
+Vegetable Oil
+Sunflower Oil
+Canola Oil
+Mustard Oil
+Coconut Oil
+Sesame Oil
+Grapeseed Oil
+Peanut Oil
+Stock
+Vegetable Stock
+Chicken Stock
+Beef Stock
+Baking Powder
+Baking Soda
+Yeast
+Vanilla Extract
+Cocoa Powder
+Chocolate
+Dark Chocolate
+Milk Chocolate
+Flour
+Cornstarch
+Gelatin
+Agar Agar
+Breadcrumbs
+Croutons
+Pickles
+Olives
+Capers
+Jam
+Peanut Butter
+Tahini
+Hummus
+Salsa
+Hot Sauce
+Kombucha
+Sparkling Water
+Coffee
+Tea
+Green Tea
+Black Tea
+Herbal Tea
+Juice
+Orange Juice
+Apple Juice
+Pasta Sauce
+Pesto
+Canned Tomatoes
+Coconut Cream
+Condensed Milk
+Evaporated Milk
+Canned Beans
+Canned Corn
+Frozen Peas
+Frozen Mixed Veg
+Frozen Berries
+Ice Cream
+Yogurt Drink
+Rice
+Basmati Rice
+Jasmine Rice
+Brown Rice
+Flour
+Wheat Flour
+All-purpose Flour
+Rice Flour
+Semolina
+Oats
+Quinoa
+Pasta
+Spaghetti
+Penne
+Noodles
+Vermicelli
+Bread
+Whole Wheat Bread
+Sourdough Bread
+Tortillas
+Wraps
+Butter
+Olive Oil
+Sunflower Oil
+Coconut Oil
+Mustard Oil
+Vinegar
+Soy Sauce
+Tomato Ketchup
+Mayonnaise
+Mustard
+Honey
+Jaggery
+Sugar
+Brown Sugar
+Salt
+Black Pepper
+Turmeric
+Cumin
+Coriander
+Garam Masala
+Chili Powder
+Paprika
+Oregano
+Basil
+Parsley
+Mint
+Cilantro
+Curry Leaves
+Bay Leaf
+Cinnamon
+Cloves
+Cardamom
+Nutmeg
+Asafoetida (Hing)
+Chickpeas
+Kidney Beans
+Black Beans
+Lentils
+Toor Dal
+Moong Dal
+Masoor Dal
+Urad Dal
+Chana Dal
+Paneer
+Cheddar Cheese
+Mozzarella
+Parmesan
+Yogurt
+Greek Yogurt
+Milk
+Eggs
+Chicken
+Fish
+Salmon
+Tuna
+Shrimp
+Tofu
+Onion
+Tomato
+Potato
+Sweet Potato
+Carrot
+Spinach
+Cauliflower
+Broccoli
+Cabbage
+Capsicum
+Bell Pepper
+Cucumber
+Eggplant
+Okra
+Zucchini
+Mushrooms
+Green Beans
+Peas
+Corn
+Ginger
+Garlic
+Green Chili
+Lemon
+Lime
+Apple
+Banana
+Mango
+Orange
+Grapes
+Strawberry
+Blueberry
+Avocado
+Coconut
+Tamarind
+Coconut Milk
+Stock
+Vegetable Stock
+Chicken Stock

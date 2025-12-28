@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="true"
-        android:label="Recipe Vault"
+        android:label="Grocery Vault"
         android:supportsRtl="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
-        android:theme="@style/Theme.RecipeSaver">
+        android:theme="@style/Theme.GrocerySaver">
         <activity
             android:name=".MainActivity"
             android:exported="true">

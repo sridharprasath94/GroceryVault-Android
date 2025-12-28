@@ -10,7 +10,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.flash.recipeVault"
+        applicationId = "com.flash.groceryVault"
         minSdk = 24
         //noinspection OldTargetApi
         targetSdk = 35
@@ -49,7 +49,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    namespace = "com.flash.recipeVault"
+    namespace = "com.flash.groceryVault"
 }
 
 dependencies {

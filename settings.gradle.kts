@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "RecipeVault"
+rootProject.name = "GroceryVault"
 include(":app")
