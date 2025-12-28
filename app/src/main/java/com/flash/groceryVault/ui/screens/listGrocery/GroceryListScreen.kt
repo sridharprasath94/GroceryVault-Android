@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.flash.groceryVault.ui.screens.listGrocery
 
 import android.content.Context
@@ -8,15 +10,34 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.flow.collectLatest
+import androidx.core.content.edit
+import com.google.firebase.auth.FirebaseAuth
+
+@Suppress("DEPRECATION")
+private fun buildGoogleClient(context: Context): GoogleSignInClient {
+    val gso = GoogleSignInOptions.Builder(
+        GoogleSignInOptions.DEFAULT_SIGN_IN
+    )
+        .requestEmail()
+        .build()
+    return GoogleSignIn.getClient(context, gso)
+}
+
+private const val cloudSyncedStatusKey = "cloud_synced"
+
+private const val cloudLastSyncedTimeKey = "cloud_last_synced_at"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,12 +50,14 @@ fun GroceryListScreen(
 ) {
     val context = LocalContext.current
     val ui by vm.ui.collectAsState()
-
+    val uid = remember { FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous" }
     // ---- Persist cloud sync status ----
-    val prefs = remember { context.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE) }
+    val prefs = remember(uid) {
+        context.getSharedPreferences("recipe_list_sync_${uid}", Context.MODE_PRIVATE)
+    }
     LaunchedEffect(Unit) {
-        val synced = prefs.getBoolean("cloud_synced", false)
-        val last = prefs.getLong("cloud_last_synced_at", 0L)
+        val synced = prefs.getBoolean(cloudSyncedStatusKey, false)
+        val last = prefs.getLong(cloudLastSyncedTimeKey, 0L)
         vm.restoreCloudStatus(synced, last)
     }
 
@@ -43,7 +66,7 @@ fun GroceryListScreen(
         if (ui.lastSyncedAt <= 0L) return@LaunchedEffect
         val hasLocalNewer = ui.rows.any { it.list.updatedAt > ui.lastSyncedAt }
         if (hasLocalNewer && ui.isCloudSynced) {
-            prefs.edit().putBoolean("cloud_synced", false).apply()
+            prefs.edit { putBoolean(cloudSyncedStatusKey, false) }
             vm.restoreCloudStatus(isCloudSynced = false, lastSyncedAt = ui.lastSyncedAt)
         }
     }
@@ -52,22 +75,99 @@ fun GroceryListScreen(
     LaunchedEffect(Unit) {
         vm.events.collectLatest { e ->
             when (e) {
-                is GroceryListEvent.Toast -> Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                is GroceryListEvent.Toast -> Toast.makeText(context, e.message, Toast.LENGTH_SHORT)
+                    .show()
+
+                GroceryListEvent.PerformGoogleSignOut -> {
+                    val googleClient = buildGoogleClient(context)
+                    googleClient.signOut().addOnCompleteListener {
+                        vm.onGoogleSignOutCompleted()
+                    }
+                }
+
                 GroceryListEvent.LoggedOut -> onLoggedOut()
             }
         }
     }
-
-    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
-    var deleteListId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("GroceryVault") },
                 actions = {
-                    IconButton(onClick = { showLogoutDialog = true }) {
-                        Icon(Icons.Default.Logout, contentDescription = "Log out")
+                    IconButton(onClick = vm::onMenuToggle) {
+                        Icon(Icons.Outlined.MoreVert, contentDescription = "More options")
+                    }
+                    DropdownMenu(
+                        expanded = ui.showMenu,
+                        onDismissRequest = vm::onMenuDismiss
+                    ) {
+                        val syncLabel = when {
+                            ui.isSyncing -> "Syncing…"
+                            ui.isCloudSynced -> "Cloud Synced"
+                            else -> "Sync now"
+                        }
+                        val syncSupporting = if (ui.lastSyncedAt > 0L) {
+                            val dt = DateFormat.format("dd MMM, HH:mm", ui.lastSyncedAt).toString()
+                            "Last synced: $dt"
+                        } else {
+                            "Not synced yet"
+                        }
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(syncLabel)
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(syncSupporting, style = MaterialTheme.typography.bodySmall)
+                                }
+                            },
+                            trailingIcon = {
+                                Box(contentAlignment = Alignment.Center) {
+                                    when {
+                                        ui.isSyncing -> CircularProgressIndicator(
+                                            modifier = Modifier.size(
+                                                18.dp
+                                            ), strokeWidth = 2.dp
+                                        )
+
+                                        ui.isCloudSynced -> Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = "Synced"
+                                        )
+
+                                        else -> Icon(
+                                            Icons.Default.CloudUpload,
+                                            contentDescription = "Not synced"
+                                        )
+                                    }
+                                }
+                            },
+                            onClick = {
+                                if (!ui.isSyncing) {
+                                    vm.requestSync(
+                                        onSuccess = { now ->
+                                            prefs.edit {
+                                                putBoolean(cloudSyncedStatusKey, true)
+                                                    .putLong(cloudLastSyncedTimeKey, now)
+                                            }
+                                        },
+                                        onFailure = {
+                                            prefs.edit { putBoolean(cloudSyncedStatusKey, false) }
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Log out") },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Logout,
+                                    contentDescription = "Log out"
+                                )
+                            },
+                            onClick = { vm.requestLogout() }
+                        )
                     }
                 }
             )
@@ -85,24 +185,6 @@ fun GroceryListScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SyncCard(
-                isSyncing = ui.isSyncing,
-                isCloudSynced = ui.isCloudSynced,
-                lastSyncedAt = ui.lastSyncedAt,
-                onSync = {
-                    vm.syncNow(
-                        onSuccess = { now ->
-                            prefs.edit()
-                                .putBoolean("cloud_synced", true)
-                                .putLong("cloud_last_synced_at", now)
-                                .apply()
-                        },
-                        onFailure = {
-                            prefs.edit().putBoolean("cloud_synced", false).apply()
-                        }
-                    )
-                }
-            )
 
             if (ui.rows.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -114,95 +196,43 @@ fun GroceryListScreen(
                         row = row,
                         onOpen = { onOpen(row.list.id) },
                         onEdit = { onEdit(row.list.id) },
-                        onDelete = { deleteListId = row.list.id }
+                        onDelete = { vm.requestDelete(row.list.id) }
                     )
                 }
             }
         }
     }
 
-    if (showLogoutDialog) {
+    if (ui.showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
+            onDismissRequest = { vm.dismissLogout() },
             title = { Text("Log out?") },
             text = { Text("Do you want to log out from this account?") },
             confirmButton = {
-                TextButton(onClick = {
-                    showLogoutDialog = false
-                    vm.signOut()
-                }) { Text("Log out") }
+                TextButton(onClick = { vm.confirmLogout() }) { Text("Log out") }
             },
-            dismissButton = { TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { vm.dismissLogout() }) { Text("Cancel") } }
         )
     }
 
-    deleteListId?.let { id ->
+    ui.pendingDeleteListId?.let { _ ->
         AlertDialog(
-            onDismissRequest = { deleteListId = null },
+            onDismissRequest = { vm.dismissDelete() },
             title = { Text("Delete list?") },
             text = { Text("This will delete the list (synced as tombstone).") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.deleteList(
-                        listId = id,
-                        onSuccess = { deleteListId = null },
+                    vm.confirmDelete(
+                        onSuccess = { vm.dismissDelete() },
                         onFailure = {
-                            deleteListId = null
+                            vm.dismissDelete()
                             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                         }
                     )
                 }) { Text("Delete") }
             },
-            dismissButton = { TextButton(onClick = { deleteListId = null }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { vm.dismissDelete() }) { Text("Cancel") } }
         )
-    }
-}
-
-@Composable
-private fun SyncCard(
-    isSyncing: Boolean,
-    isCloudSynced: Boolean,
-    lastSyncedAt: Long,
-    onSync: () -> Unit
-) {
-    val label = when {
-        isSyncing -> "Syncing with Cloud"
-        isCloudSynced -> "Cloud Synced"
-        else -> "Sync with Cloud"
-    }
-    Card {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(label, style = MaterialTheme.typography.titleMedium)
-                if (lastSyncedAt > 0L) {
-                    val dt = DateFormat.format("dd MMM, HH:mm", lastSyncedAt).toString()
-                    Text("Last synced: $dt", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            OutlinedButton(onClick = onSync, enabled = !isSyncing) {
-                Text("Sync")
-            }
-            Spacer(Modifier.width(10.dp))
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(34.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    when {
-                        isSyncing -> CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                        isCloudSynced -> Icon(Icons.Default.Check, contentDescription = "Synced")
-                        else -> Icon(Icons.Default.CloudUpload, contentDescription = "Not synced")
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -234,7 +264,12 @@ fun GroceryListCard(
                 Text(detail, style = MaterialTheme.typography.bodyMedium)
             }
             IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
-            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Delete") }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete"
+                )
+            }
         }
     }
 }

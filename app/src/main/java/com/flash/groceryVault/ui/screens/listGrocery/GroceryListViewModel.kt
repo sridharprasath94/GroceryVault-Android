@@ -18,11 +18,15 @@ data class GroceryListUiState(
     val isSyncing: Boolean = false,
     val isCloudSynced: Boolean = false,
     val lastSyncedAt: Long = 0L,
+    val showMenu: Boolean = false,
+    val showLogoutDialog: Boolean = false,
+    val pendingDeleteListId: Long? = null,
 )
 
-sealed class GroceryListEvent {
-    data class Toast(val message: String) : GroceryListEvent()
-    data object LoggedOut : GroceryListEvent()
+sealed interface GroceryListEvent {
+    data class Toast(val message: String) : GroceryListEvent
+    data object PerformGoogleSignOut : GroceryListEvent
+    data object LoggedOut : GroceryListEvent
 }
 
 class GroceryListViewModel(
@@ -55,23 +59,61 @@ class GroceryListViewModel(
         }
     }
 
-    fun signOut() {
-        container.signOut()
-        _events.tryEmit(GroceryListEvent.LoggedOut)
-    }
-
-    fun onLocalMutation() {
-        // call after create/edit/delete so UI shows "needs sync"
-        _ui.update { it.copy(isCloudSynced = false) }
-    }
-
     fun restoreCloudStatus(isCloudSynced: Boolean, lastSyncedAt: Long) {
         _ui.update { it.copy(isCloudSynced = isCloudSynced, lastSyncedAt = lastSyncedAt) }
     }
 
-    fun syncNow(onSuccess: (Long) -> Unit, onFailure: (String) -> Unit) {
+    fun onMenuToggle() {
+        _ui.update { it.copy(showMenu = !it.showMenu) }
+    }
+
+    fun onMenuDismiss() {
+        _ui.update { it.copy(showMenu = false) }
+    }
+
+    fun requestLogout() {
+        _ui.update { it.copy(showMenu = false, showLogoutDialog = true) }
+    }
+
+    fun dismissLogout() {
+        _ui.update { it.copy(showLogoutDialog = false) }
+    }
+
+    fun confirmLogout() {
+        _ui.update { it.copy(showLogoutDialog = false) }
+        _events.tryEmit(GroceryListEvent.PerformGoogleSignOut)
+    }
+
+    fun onGoogleSignOutCompleted() {
+        container.signOut()
+        _events.tryEmit(GroceryListEvent.LoggedOut)
+    }
+
+    fun requestDelete(listId: Long) {
+        _ui.update { it.copy(pendingDeleteListId = listId) }
+    }
+
+    fun dismissDelete() {
+        _ui.update { it.copy(pendingDeleteListId = null) }
+    }
+
+    fun confirmDelete(onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        val listId = _ui.value.pendingDeleteListId ?: return
+        viewModelScope.launch {
+            runCatching {
+                repo.deleteList(listId)
+            }.onSuccess {
+                _ui.update { it.copy(isCloudSynced = false, pendingDeleteListId = null) }
+                onSuccess()
+            }.onFailure {
+                onFailure(it.message ?: "Delete failed")
+            }
+        }
+    }
+
+    fun requestSync(onSuccess: (Long) -> Unit, onFailure: (String) -> Unit) {
         if (_ui.value.isSyncing) return
-        _ui.update { it.copy(isSyncing = true) }
+        _ui.update { it.copy(isSyncing = true, showMenu = false) }
 
         viewModelScope.launch {
             runCatching {
@@ -80,24 +122,11 @@ class GroceryListViewModel(
                 val now = System.currentTimeMillis()
                 _ui.update { it.copy(isSyncing = false, isCloudSynced = true, lastSyncedAt = now) }
                 onSuccess(now)
-            }.onFailure {
+            }.onFailure { it ->
                 _ui.update { it.copy(isSyncing = false, isCloudSynced = false) }
                 val msg = it.message ?: "Sync failed"
                 _events.tryEmit(GroceryListEvent.Toast(msg))
                 onFailure(msg)
-            }
-        }
-    }
-
-    fun deleteList(listId: Long, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        viewModelScope.launch {
-            runCatching {
-                repo.deleteList(listId)
-            }.onSuccess {
-                _ui.update { it.copy(isCloudSynced = false) }
-                onSuccess()
-            }.onFailure {
-                onFailure(it.message ?: "Delete failed")
             }
         }
     }
