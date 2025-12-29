@@ -21,7 +21,22 @@ data class GroceryListUiState(
     val showMenu: Boolean = false,
     val showLogoutDialog: Boolean = false,
     val pendingDeleteListId: Long? = null,
-)
+) {
+    val showDeleteDialog: Boolean get() = pendingDeleteListId != null
+    val syncLabel: String
+        get() = when {
+            isSyncing -> "Syncing…"
+            isCloudSynced -> "Cloud Synced"
+            else -> "Sync now"
+        }
+    val syncSupportingText: String
+        get() = if (lastSyncedAt > 0L) {
+            val dt = android.text.format.DateFormat.format("dd MMM, HH:mm", lastSyncedAt).toString()
+            "Last synced: $dt"
+        } else {
+            "Not synced yet"
+        }
+}
 
 sealed interface GroceryListEvent {
     data class Toast(val message: String) : GroceryListEvent

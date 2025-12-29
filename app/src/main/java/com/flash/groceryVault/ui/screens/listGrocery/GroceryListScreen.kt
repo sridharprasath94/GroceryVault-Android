@@ -156,23 +156,15 @@ fun GroceryListScreen(
                         expanded = ui.showMenu,
                         onDismissRequest = vm::onMenuDismiss
                     ) {
-                        val syncLabel = when {
-                            ui.isSyncing -> "Syncing…"
-                            ui.isCloudSynced -> "Cloud Synced"
-                            else -> "Sync now"
-                        }
-                        val syncSupporting = if (ui.lastSyncedAt > 0L) {
-                            val dt = DateFormat.format("dd MMM, HH:mm", ui.lastSyncedAt).toString()
-                            "Last synced: $dt"
-                        } else {
-                            "Not synced yet"
-                        }
                         DropdownMenuItem(
                             text = {
                                 Column {
-                                    Text(syncLabel)
+                                    Text(ui.syncLabel)
                                     Spacer(Modifier.height(2.dp))
-                                    Text(syncSupporting, style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        ui.syncSupportingText,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                             },
                             trailingIcon = {
@@ -257,7 +249,9 @@ fun GroceryListScreen(
         )
     }
 
-    ui.pendingDeleteListId?.let { _ ->
+
+
+    if(ui.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { vm.dismissDelete() },
             title = { Text("Delete list?") },

@@ -41,13 +41,13 @@ fun EditGroceryScreen(
     val items = remember { mutableStateListOf<GroceryItemFormRow>() }
     var initialized by remember { mutableStateOf(false) }
 
-    var error by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            error = null
-        }
-    }
+//    var error by remember { mutableStateOf<String?>(null) }
+//    LaunchedEffect(error) {
+//        error?.let {
+//            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+//            error = null
+//        }
+//    }
 
     LaunchedEffect(data) {
         val d = data ?: return@LaunchedEffect
@@ -74,7 +74,9 @@ fun EditGroceryScreen(
                                 description = desc.trim().ifEmpty { null },
                                 items = items.map { it.name to it.isChecked },
                                 onDone = onSaved,
-                                onError = { error = it }
+                                onError = {
+//                                    error = it
+                                }
                             )
                         },
                         enabled = !ui.isSaving
