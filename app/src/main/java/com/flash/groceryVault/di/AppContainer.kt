@@ -26,30 +26,84 @@ class AppContainer(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
 ) {
 
-    private val db by lazy { GroceryDatabase.getDatabase(appContext) }
+    // Cache per-user instances to avoid recreating them on every call.
+    private var cachedUid: String? = null
+    private var cachedDb: GroceryDatabase? = null
+    private var cachedGroceryRepo: GroceryRepository? = null
+    private var cachedSuggestionsRepo: SuggestionsRepository? = null
+    private var cachedSync: FirestoreSyncService? = null
+    private var cachedBackup: FirebaseBackupService? = null
 
-    val groceryRepository: GroceryRepository by lazy {
-        GroceryRepository(dao = db.groceryDao())
+    /**
+     * Ensures caches match the current user. If user changed, rebuild user-scoped objects.
+     */
+    private fun ensureUserCache(): String {
+        val uid = auth.currentUser?.uid ?: error("User not logged in")
+        if (cachedUid != uid) {
+            clearUserScopedCaches()
+            cachedUid = uid
+        }
+        return uid
+    }
+
+    /**
+     * Clears all instances that are scoped to the currently logged in user.
+     * Call this on logout or whenever user changes.
+     */
+    private fun clearUserScopedCaches() {
+        cachedUid = null
+        cachedDb = null
+        cachedGroceryRepo = null
+        cachedSuggestionsRepo = null
+        cachedSync = null
+        cachedBackup = null
+    }
+
+
+    val groceryRepositoryForCurrentUser: GroceryRepository by lazy {
+        val uid = ensureUserCache()
+
+        val db = cachedDb ?: GroceryDatabase.getDatabase(
+            appContext,
+            dbName = "grocery_db_$uid"
+        ).also { cachedDb = it }
+
+        return@lazy cachedGroceryRepo ?: GroceryRepository(dao = db.groceryDao()).also {
+            cachedGroceryRepo = it
+        }
     }
 
     val suggestionsRepository: SuggestionsRepository by lazy {
-        SuggestionsRepository(dao = db.suggestionDao())
+        val uid = ensureUserCache()
+        val db = cachedDb ?: GroceryDatabase.getDatabase(
+            appContext,
+            dbName = "grocery_db_$uid"
+        ).also { cachedDb = it }
+        return@lazy cachedSuggestionsRepo ?: SuggestionsRepository(dao = db.suggestionDao()).also {
+            cachedSuggestionsRepo = it
+        }
     }
 
     fun firestoreSyncServiceForCurrentUser(): FirestoreSyncService {
-        return FirestoreSyncService(
-            repo = groceryRepository,
+        ensureUserCache()
+        return cachedSync ?: FirestoreSyncService(
+            repo = groceryRepositoryForCurrentUser,
             auth = auth,
             firestore = firestore
-        )
+        ).also {
+            cachedSync = it
+        }
     }
 
     fun firebaseBackupServiceForCurrentUser(): FirebaseBackupService {
+        ensureUserCache()
         return FirebaseBackupService(
-            repo = groceryRepository,
+            repo = groceryRepositoryForCurrentUser,
             auth = auth,
             firestore = firestore
-        )
+        ).also {
+            cachedBackup = it
+        }
     }
 
     fun signOut() {
