@@ -262,7 +262,7 @@ fun GroceryListScreen(
         AlertDialog(
             onDismissRequest = { vm.dismissDelete() },
             title = { Text("Delete list?") },
-            text = { Text("This will delete the list (synced as tombstone).") },
+            text = { Text("This action cannot be undone!!!") },
             confirmButton = {
                 TextButton(onClick = {
                     vm.confirmDelete(
