@@ -4,7 +4,6 @@ package com.flash.groceryVault.ui.screens.listGrocery
 
 import android.content.Context
 import android.text.format.DateFormat
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
