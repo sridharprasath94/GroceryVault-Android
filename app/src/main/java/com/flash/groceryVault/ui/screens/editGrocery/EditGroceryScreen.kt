@@ -1,6 +1,5 @@
 package com.flash.groceryVault.ui.screens.editGrocery
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -120,7 +119,7 @@ fun EditGroceryScreen(
                     items.forEachIndexed { idx, row ->
                         GroceryItemRow(
                             index = idx + 1,
-                            row = row,
+                            groceryItems = row,
                             suggestions = suggestions,
                             onChange = { items[idx] = it },
                             onRemove = if (items.size > 1) ({ items.removeAt(idx) }) else null

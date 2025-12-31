@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun GroceryItemRow(
     index: Int,
-    row: GroceryItemFormRow,
+    groceryItems: GroceryItemFormRow,
     onChange: (GroceryItemFormRow) -> Unit,
     onRemove: (() -> Unit)?,
     suggestions: List<String>,
@@ -38,8 +38,8 @@ fun GroceryItemRow(
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SuggestionAutoCompleteField(
-                value = TextFieldValue(row.name),
-                onValueChange = { onChange(row.copy(name = it.text)) },
+                value = TextFieldValue(groceryItems.name),
+                onValueChange = { onChange(groceryItems.copy(name = it.text)) },
                 suggestions = suggestions,
                 label = "Grocery item",
                 matchMode = MatchMode.Prefix,
@@ -49,8 +49,8 @@ fun GroceryItemRow(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
-                    checked = row.isChecked,
-                    onCheckedChange = { onChange(row.copy(isChecked = it)) }
+                    checked = groceryItems.isChecked,
+                    onCheckedChange = { onChange(groceryItems.copy(isChecked = it)) }
                 )
                 Text("Checked")
             }

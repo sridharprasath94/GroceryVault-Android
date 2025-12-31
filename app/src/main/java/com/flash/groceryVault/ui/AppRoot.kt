@@ -17,6 +17,7 @@ import com.flash.groceryVault.ui.screens.auth.AuthScreen
 import com.flash.groceryVault.ui.screens.auth.AuthState
 import com.flash.groceryVault.ui.screens.auth.AuthViewModel
 import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryScreen
+import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryViewModel
 import com.flash.groceryVault.ui.screens.detailGrocery.GroceryDetailScreen
 import com.flash.groceryVault.ui.screens.editGrocery.EditGroceryScreen
 import com.flash.groceryVault.ui.screens.listGrocery.GroceryListScreen
@@ -85,8 +86,9 @@ fun AppRoot(container: AppContainer) {
         }
 
         composable(Routes.CREATE) {
+            val vm = remember { CreateGroceryViewModel(container) }
             CreateGroceryScreen(
-                container = container,
+                vm = vm,
                 onBack = { nav.popBackStack() },
                 onCreated = { id ->
                     nav.popBackStack()
