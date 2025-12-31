@@ -1,6 +1,12 @@
 package com.flash.groceryVault.ui
 
-import androidx.compose.runtime.*
+import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -8,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.flash.groceryVault.di.AppContainer
 import com.flash.groceryVault.ui.screens.auth.AuthScreen
+import com.flash.groceryVault.ui.screens.auth.AuthState
 import com.flash.groceryVault.ui.screens.auth.AuthViewModel
 import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryScreen
 import com.flash.groceryVault.ui.screens.detailGrocery.GroceryDetailScreen
@@ -38,7 +45,7 @@ fun AppRoot(container: AppContainer) {
     // Start/stop realtime sync while logged in
     DisposableEffect(authState) {
         val sync = runCatching { container.firestoreSyncServiceForCurrentUser() }.getOrNull()
-        if (authState is com.flash.groceryVault.ui.screens.auth.AuthState.LoggedIn && sync != null) {
+        if (authState is AuthState.LoggedIn && sync != null) {
             sync.startRealTime()
             onDispose { sync.stopRealTime() }
         } else {
@@ -48,7 +55,7 @@ fun AppRoot(container: AppContainer) {
 
     NavHost(
         navController = nav,
-        startDestination = if (authState is com.flash.groceryVault.ui.screens.auth.AuthState.LoggedIn) Routes.LIST else Routes.AUTH
+        startDestination = if (authState is AuthState.LoggedIn) Routes.LIST else Routes.AUTH
     ) {
         composable(Routes.AUTH) {
             AuthScreen(
@@ -62,6 +69,7 @@ fun AppRoot(container: AppContainer) {
         }
 
         composable(Routes.LIST) {
+//            LocalContext.current.deleteDatabase( "grocery_db_${(authState as? AuthState.LoggedIn)?.uid}")
             val vm = remember { GroceryListViewModel(container) }
             GroceryListScreen(
                 vm = vm,

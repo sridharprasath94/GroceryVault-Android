@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class GroceryDetailViewModel(
-    private val container: AppContainer,
+    container: AppContainer,
     listId: Long,
 ) : ViewModel() {
 
-    private val repo = container.groceryRepository
+    private val repo = container.groceryRepositoryForCurrentUser
 
     val data: StateFlow<GroceryListWithItems?> =
         repo.observeListWithItems(listId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)

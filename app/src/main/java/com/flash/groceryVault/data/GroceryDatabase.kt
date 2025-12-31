@@ -20,18 +20,34 @@ abstract class GroceryDatabase : RoomDatabase() {
     abstract fun suggestionDao(): SuggestionDao
 
     companion object {
-        @Volatile private var Instance: GroceryDatabase? = null
+        @Volatile
+        private var Instance: GroceryDatabase? = null
 
-        fun getDatabase(context: Context): GroceryDatabase {
-            return Instance ?: synchronized(this) {
+        @Volatile
+        private var LAST_NAME: String? = null
+
+        /**
+         * Default DB (fallback). In this app we use per-user databases named recipe_db_<uid>.
+         */
+        fun getDatabase(context: Context): GroceryDatabase = getDatabase(context, "grocery_db")
+        fun getDatabase(context: Context, dbName: String): GroceryDatabase {
+            val existing = Instance
+            if (existing != null && LAST_NAME == dbName) return existing
+            return synchronized(this) {
+                val current = Instance
+                if (current != null && LAST_NAME == dbName) return@synchronized current
                 Room.databaseBuilder(
                     context.applicationContext,
                     GroceryDatabase::class.java,
-                    "grocery_vault.db"
+                    dbName
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(false)
                     .build()
-                    .also { Instance = it }
+                    .also {
+                        Instance = it
+                        LAST_NAME = dbName
+
+                    }
             }
         }
     }

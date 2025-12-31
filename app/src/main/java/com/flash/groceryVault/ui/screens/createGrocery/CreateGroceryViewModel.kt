@@ -14,10 +14,10 @@ data class CreateGroceryUiState(
 )
 
 class CreateGroceryViewModel(
-    private val container: AppContainer
+    container: AppContainer
 ) : ViewModel() {
 
-    private val repo = container.groceryRepository
+    private val repo = container.groceryRepositoryForCurrentUser
     private val suggestionsRepo = container.suggestionsRepository
 
     private val _ui = MutableStateFlow(CreateGroceryUiState())

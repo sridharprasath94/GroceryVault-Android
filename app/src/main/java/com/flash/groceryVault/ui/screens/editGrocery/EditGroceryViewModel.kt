@@ -13,11 +13,11 @@ data class EditGroceryUiState(
 )
 
 class EditGroceryViewModel(
-    private val container: AppContainer,
+    container: AppContainer,
     private val listId: Long,
 ) : ViewModel() {
 
-    private val repo = container.groceryRepository
+    private val repo = container.groceryRepositoryForCurrentUser
     private val suggestionsRepo = container.suggestionsRepository
 
     val data: StateFlow<GroceryListWithItems?> =

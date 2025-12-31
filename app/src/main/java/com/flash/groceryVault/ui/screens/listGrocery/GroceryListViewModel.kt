@@ -21,11 +21,27 @@ data class GroceryListUiState(
     val showMenu: Boolean = false,
     val showLogoutDialog: Boolean = false,
     val pendingDeleteListId: Long? = null,
-)
+) {
+    val showDeleteDialog: Boolean get() = pendingDeleteListId != null
+    val syncLabel: String
+        get() = when {
+            isSyncing -> "Syncing…"
+            isCloudSynced -> "Cloud Synced"
+            else -> "Sync now"
+        }
+    val syncSupportingText: String
+        get() = if (lastSyncedAt > 0L) {
+            val dt = android.text.format.DateFormat.format("dd MMM, HH:mm", lastSyncedAt).toString()
+            "Last synced: $dt"
+        } else {
+            "Not synced yet"
+        }
+}
 
 sealed interface GroceryListEvent {
     data class Toast(val message: String) : GroceryListEvent
     data object PerformGoogleSignOut : GroceryListEvent
+    object SyncNow : GroceryListEvent
     data object LoggedOut : GroceryListEvent
 }
 
@@ -33,7 +49,7 @@ class GroceryListViewModel(
     private val container: AppContainer,
 ) : ViewModel() {
 
-    private val repo = container.groceryRepository
+    private val repo = container.groceryRepositoryForCurrentUser
 
     private val _ui = MutableStateFlow(GroceryListUiState())
     val ui: StateFlow<GroceryListUiState> = _ui.asStateFlow()
@@ -59,8 +75,19 @@ class GroceryListViewModel(
         }
     }
 
+    fun syncNowWithCloud() {
+        _events.tryEmit(GroceryListEvent.SyncNow)
+    }
+
     fun restoreCloudStatus(isCloudSynced: Boolean, lastSyncedAt: Long) {
-        _ui.update { it.copy(isCloudSynced = isCloudSynced, lastSyncedAt = lastSyncedAt) }
+        val validSynced = isCloudSynced && lastSyncedAt > 0L
+
+        _ui.update {
+            it.copy(
+                isCloudSynced = validSynced,
+                lastSyncedAt = lastSyncedAt
+            )
+        }
     }
 
     fun onMenuToggle() {

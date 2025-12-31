@@ -6,6 +6,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +19,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.flash.groceryVault.R
 import com.flash.groceryVault.ui.components.StandardTextField
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -33,7 +37,7 @@ fun AuthScreen(
     onLoggedIn: () -> Unit
 ) {
     val state by vm.state.collectAsState()
-    val form by vm.form.collectAsState()
+    val ui by vm.ui.collectAsState()
     val context = LocalContext.current
 
     // Requires a real google-services.json to generate R.string.default_web_client_id
@@ -47,6 +51,12 @@ fun AuthScreen(
         vm.onGoogleResult(result.resultCode, result.data)
     }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            vm.onScreenVisible()
+        }
+    }
 
     LaunchedEffect(Unit) {
         vm.events.collectLatest { event ->
@@ -54,7 +64,11 @@ fun AuthScreen(
                 is AuthEvent.Toast -> Toast.makeText(context, event.message, Toast.LENGTH_LONG)
                     .show()
 
-                AuthEvent.NavigateLoggedIn -> onLoggedIn()
+                AuthEvent.NavigateLoggedIn -> {
+                    vm.startNavigation()
+                    onLoggedIn()
+                }
+
                 AuthEvent.LaunchGoogleSignIn -> googleLauncher.launch(googleClient.signInIntent)
             }
         }
@@ -62,17 +76,32 @@ fun AuthScreen(
 
 
     Scaffold { padding ->
-        AuthFormContent(
-            padding = padding,
-            email = form.email,
-            onEmailChange = vm::onEmailChange,
-            password = form.password,
-            onPasswordChange = vm::onPasswordChange,
-            state = state,
-            onSignIn = vm::submitSignIn,
-            onSignUp = vm::submitSignUp,
-            onGoogleSignIn = { vm.onGoogleSignInClicked(webClientId) }
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            AuthFormContent(
+                padding = padding,
+                email = ui.email,
+                onEmailChange = vm::onEmailChange,
+                password = ui.password,
+                onPasswordChange = vm::onPasswordChange,
+                state = state,
+                onSignIn = vm::submitSignIn,
+                onSignUp = vm::submitSignUp,
+                onGoogleSignIn = { vm.onGoogleSignInClicked(webClientId) }
+            )
+
+            if (ui.isNavigating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
+                        )
+                )
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
     }
 }
 
