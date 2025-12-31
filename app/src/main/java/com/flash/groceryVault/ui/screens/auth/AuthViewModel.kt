@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.flash.groceryVault.ui.screens.auth
 
 import android.app.Activity
@@ -9,13 +10,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -32,10 +33,10 @@ sealed class AuthState {
     data class LoggedIn(val uid: String, val email: String?) : AuthState()
 }
 
-data class AuthFormState(
+data class AuthFormUiState(
     val email: String = "",
     val password: String = "",
-    val message: String? = null,
+    val isNavigating: Boolean = false,
 )
 
 class AuthViewModel(
@@ -45,8 +46,8 @@ class AuthViewModel(
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
     val state: StateFlow<AuthState> = _state
 
-    private val _form = MutableStateFlow(AuthFormState())
-    val form: StateFlow<AuthFormState> = _form
+    private val _ui = MutableStateFlow(AuthFormUiState())
+    val ui: StateFlow<AuthFormUiState> = _ui
 
     private val _events = MutableSharedFlow<AuthEvent>(
         replay = 0,
@@ -55,26 +56,18 @@ class AuthViewModel(
     )
     val events: SharedFlow<AuthEvent> = _events.asSharedFlow()
 
-    // Cache last known logged-in user to avoid re-emitting navigation repeatedly
-    private var cachedUid: String? = null
+    private val authListener = FirebaseAuth.AuthStateListener { updateAuthState() }
 
+    init {
+        updateAuthState()
+        auth.addAuthStateListener(authListener)
+    }
     fun onEmailChange(v: String) {
-        _form.value = _form.value.copy(email = v, message = null)
+        _ui.value = _ui.value.copy(email = v)
     }
 
     fun onPasswordChange(v: String) {
-        _form.value = _form.value.copy(password = v, message = null)
-    }
-
-    fun clearMessage() {
-        if (_form.value.message != null) _form.value = _form.value.copy(message = null)
-    }
-
-    private val authListener = FirebaseAuth.AuthStateListener { refresh() }
-
-    init {
-        refresh()
-        auth.addAuthStateListener(authListener)
+        _ui.value = _ui.value.copy(password = v)
     }
 
     override fun onCleared() {
@@ -82,34 +75,22 @@ class AuthViewModel(
         super.onCleared()
     }
 
-    private fun refresh() {
+    private fun updateAuthState() {
         val user = auth.currentUser
-
-        if (user == null) {
-            cachedUid = null
-            _state.value = AuthState.LoggedOut
-            return
+        _state.update {
+            user?.let {
+                AuthState.LoggedIn(it.uid, it.email) }
+                ?: AuthState.LoggedOut
         }
-
-        val newUid = user.uid
-        val newEmail = user.email
-        val wasLoggedIn = cachedUid != null
-        val uidChanged = cachedUid != newUid
-
-        cachedUid = newUid
-        _state.value = AuthState.LoggedIn(newUid, newEmail)
-
-        if (!wasLoggedIn || uidChanged) {
-            _events.tryEmit(AuthEvent.NavigateLoggedIn)
-        }
+        user?.let {  emitIfAllowed(AuthEvent.NavigateLoggedIn) }
     }
+
 
     fun signIn(email: String, password: String) = viewModelScope.launch {
         val cleanEmail = email.trim()
         val cleanPass = password.trim()
 
         if (cleanEmail.isBlank() || cleanPass.isBlank()) {
-            _form.value = _form.value.copy(message = "Email and password are required")
             toast("Email and password are required")
             return@launch
         }
@@ -117,7 +98,7 @@ class AuthViewModel(
         try {
             _state.value = AuthState.Loading
             auth.signInWithEmailAndPassword(cleanEmail, cleanPass).await()
-            refresh()
+
         } catch (e: Exception) {
             toast(e.message ?: "Sign-in failed")
         }
@@ -128,7 +109,6 @@ class AuthViewModel(
         val cleanPass = password.trim()
 
         if (cleanEmail.isBlank() || cleanPass.isBlank()) {
-            _form.value = _form.value.copy(message = "Email and password are required")
             toast("Email and password are required")
             return@launch
         }
@@ -136,24 +116,20 @@ class AuthViewModel(
         try {
             _state.value = AuthState.Loading
             auth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
-            refresh()
         } catch (e: Exception) {
             toast(e.message ?: "Sign-up failed")
         }
     }
 
-    fun submitSignIn() = signIn(form.value.email, form.value.password)
+    fun submitSignIn() = signIn(ui.value.email, ui.value.password)
 
-    fun submitSignUp() = signUp(form.value.email, form.value.password)
+    fun submitSignUp() = signUp(ui.value.email, ui.value.password)
 
     fun signInWithGoogleIdToken(idToken: String) = viewModelScope.launch {
         try {
             _state.value = AuthState.Loading
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             auth.signInWithCredential(credential).await()
-            clearMessage()
-            Log.d("AuthViewModel", "Google sign-in successful")
-            refresh()
         } catch (e: Exception) {
             Log.e("AuthViewModel", "Google sign-in failed", e)
             toast(e.message ?: "Google sign-in failed")
@@ -192,12 +168,27 @@ class AuthViewModel(
         if (webClientId.isBlank()) {
             toast("Google Sign-In is not configured. Please set up Firebase and provide a valid web client ID.")
         } else {
-            _events.tryEmit(AuthEvent.LaunchGoogleSignIn)
+            emitIfAllowed(AuthEvent.LaunchGoogleSignIn)
         }
     }
-
     private fun toast(message: String) {
-        _events.tryEmit(AuthEvent.Toast(message))
+        emitIfAllowed(AuthEvent.Toast(message))
+    }
+
+
+    fun startNavigation() {
+        _ui.update { it.copy(isNavigating = true) }
+    }
+
+    fun onScreenVisible() {
+        _ui.update { it.copy(isNavigating = false) }
+    }
+
+
+    private fun emitIfAllowed(event: AuthEvent) {
+        if (!_ui.value.isNavigating) {
+            _events.tryEmit(event)
+        }
     }
 }
 
