@@ -55,11 +55,11 @@ private fun previewEditGroceryUiSavingState(): EditGroceryUiState =
     )
 
 @Preview(
-    name = "Create Grocery – Light",
+    name = "Create Grocery Content – Light",
     showBackground = true
 )
 @Preview(
-    name = "Create Grocery – Dark",
+    name = "Create Grocery Content – Dark",
     showBackground = true,
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
 )
@@ -81,11 +81,11 @@ fun CreateGroceryFormContentPreview() {
 
 
 @Preview(
-    name = "Create Grocery – Light",
+    name = "Create Grocery Saving – Light",
     showBackground = true
 )
 @Preview(
-    name = "Create Grocery – Dark",
+    name = "Create Grocery Saving – Dark",
     showBackground = true,
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
 )
@@ -106,11 +106,11 @@ fun CreateGroceryFormSavingPreview() {
 }
 
 @Preview(
-    name = "Create Grocery – Light",
+    name = "Create Grocery Loading – Light",
     showBackground = true
 )
 @Preview(
-    name = "Create Grocery – Dark",
+    name = "Create Grocery Loading – Dark",
     showBackground = true,
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
 )

@@ -8,7 +8,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
-private fun previewCreateGroceryUiState(): CreateGroceryUiState =
+private fun previewCreateGroceryUiContentState(): CreateGroceryUiState =
     CreateGroceryUiState(
         title = "Weekly Groceries",
         description = "Buy items for the coming week",
@@ -23,13 +23,28 @@ private fun previewCreateGroceryUiState(): CreateGroceryUiState =
         isNavigating = false
     )
 
+private fun previewCreateGroceryUiSavingState(): CreateGroceryUiState =
+    CreateGroceryUiState(
+        title = "Weekly Groceries",
+        description = "Buy items for the coming week",
+        groceryItems = listOf(
+            GroceryItemFormRow(name = "Milk"),
+            GroceryItemFormRow(name = "Eggs"),
+            GroceryItemFormRow(name = "Rice"),
+            GroceryItemFormRow(name = "Vegetables")
+        ),
+        suggestions = listOf("Milk", "Eggs", "Rice", "Vegetables", "Bread"),
+        isSaving = true,
+        isNavigating = false
+    )
+
 
 @Preview(
-    name = "Create Grocery – Light",
+    name = "Create Grocery Content – Light",
     showBackground = true
 )
 @Preview(
-    name = "Create Grocery – Dark",
+    name = "Create Grocery Content – Dark",
     showBackground = true,
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
 )
@@ -37,7 +52,32 @@ private fun previewCreateGroceryUiState(): CreateGroceryUiState =
 fun CreateGroceryFormPreview() {
     GroceryVaultTheme {
         CreateGroceryForm(
-            ui = previewCreateGroceryUiState(),
+            ui = previewCreateGroceryUiContentState(),
+            onBack = {},
+            onSave = {},
+            onTitleChange = {},
+            onDescriptionChange = {},
+            onItemChange = { _, _ -> },
+            onItemRemove = {},
+            onAddItem = {}
+        )
+    }
+}
+
+@Preview(
+    name = "Create Grocery Saving – Light",
+    showBackground = true
+)
+@Preview(
+    name = "Create Grocery Saving – Dark",
+    showBackground = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun CreateGroceryFormSavingPreview() {
+    GroceryVaultTheme {
+        CreateGroceryForm(
+            ui = previewCreateGroceryUiSavingState(),
             onBack = {},
             onSave = {},
             onTitleChange = {},
