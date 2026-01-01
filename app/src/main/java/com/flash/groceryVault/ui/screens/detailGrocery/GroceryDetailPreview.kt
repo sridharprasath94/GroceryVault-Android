@@ -2,6 +2,7 @@ package com.flash.groceryVault.ui.screens.detailGrocery
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.flash.groceryVault.data.GroceryItemEntity
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
@@ -13,16 +14,19 @@ private fun fakeGroceryDetailUiState(
         description = "Items to buy for the coming week",
         createdAt = "12 Mar 2026, 18:45",
         groceryItems = listOf(
-            GroceryItemFormRow(
+            GroceryItemEntity(
                 name = "Milk",
+                listId = 1,
                 isChecked = false
             ),
-            GroceryItemFormRow(
+            GroceryItemEntity(
                 name = "Eggs",
+                listId = 2,
                 isChecked = true
             ),
-            GroceryItemFormRow(
+            GroceryItemEntity(
                 name = "Bread",
+                listId = 3,
                 isChecked = false
             )
         ),
@@ -47,7 +51,7 @@ fun GroceryDetailPreview_Loaded() {
             ui = fakeGroceryDetailUiState(),
             onBack = {},
             onEdit = {},
-            onToggleItemChecked = {}
+            onToggleItemChecked = { _: Long, _: Boolean -> }
         )
     }
 }
@@ -68,7 +72,7 @@ fun GroceryDetailPreview_Loading() {
             ui = fakeGroceryDetailUiState(isLoading = true),
             onBack = {},
             onEdit = {},
-            onToggleItemChecked = {}
+            onToggleItemChecked = { _: Long, _: Boolean -> }
         )
     }
 }

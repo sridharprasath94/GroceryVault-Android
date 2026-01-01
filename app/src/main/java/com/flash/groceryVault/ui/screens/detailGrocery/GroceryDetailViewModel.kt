@@ -3,9 +3,8 @@ package com.flash.groceryVault.ui.screens.detailGrocery
 import android.text.format.DateFormat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flash.groceryVault.data.GroceryListWithItems
+import com.flash.groceryVault.data.GroceryItemEntity
 import com.flash.groceryVault.data.GroceryRepository
-import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +27,7 @@ data class GroceryDetailUiState(
     val title: String = "",
     val description: String? = "",
     val createdAt: String = "",
-    val groceryItems: List<GroceryItemFormRow> = listOf(GroceryItemFormRow()),
+    val groceryItems: List<GroceryItemEntity> = emptyList(),
     val isLoadingData: Boolean = false,
     val isNavigating: Boolean = false,
 )
@@ -46,46 +45,55 @@ class GroceryDetailViewModel(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val events: SharedFlow<GroceryDetailEvent> = _events.asSharedFlow()
-    val data: StateFlow<GroceryListWithItems?> =
-        groceryRepository.observeListWithItems(listId)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         // Observe grocery data to populate UI state
         viewModelScope.launch {
-            data.collect { groceryListWithItems ->
-                if (groceryListWithItems != null) {
-                    _ui.update {
-                        it.copy(
-                            title = groceryListWithItems.list.title,
-                            description = groceryListWithItems.list.description,
-                            createdAt = DateFormat.format(
-                                "dd MMM yyyy, HH:mm",
-                                groceryListWithItems.list.createdAt
-                            ).toString(),
-                            groceryItems = groceryListWithItems.items.map { item ->
-                                GroceryItemFormRow(
-                                    name = item.name,
-                                    isChecked = item.isChecked
-                                )
-                            },
-                            isLoadingData = false
-                        )
-                    }
-                } else {
-                    _ui.update {
-                        it.copy(isLoadingData = true)
+            groceryRepository.observeListWithItems(listId)
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+                .collect { groceryListWithItems ->
+                    if (groceryListWithItems != null) {
+                        _ui.update {
+                            it.copy(
+                                title = groceryListWithItems.list.title,
+                                description = groceryListWithItems.list.description,
+                                createdAt = DateFormat.format(
+                                    "dd MMM yyyy, HH:mm",
+                                    groceryListWithItems.list.createdAt
+                                ).toString(),
+                                groceryItems = groceryListWithItems.items,
+                                isLoadingData = false
+                            )
+                        }
+                    } else {
+                        _ui.update {
+                            it.copy(isLoadingData = true)
+                        }
                     }
                 }
-            }
         }
     }
 
-    fun toggleChecked(checked: Boolean) {
+    fun toggleChecked(itemId: Long, newValue: Boolean) {
+        // Optimistic UI update
+        val previousItems = _ui.value.groceryItems
+        _ui.update {
+            it.copy(
+                groceryItems = it.groceryItems.map { item ->
+                    if (item.id == itemId) item.copy(isChecked = newValue) else item
+                }
+            )
+        }
+
         viewModelScope.launch {
             try {
-                groceryRepository.setItemChecked(listId, checked)
+                groceryRepository.setItemChecked(
+                    itemId = itemId,
+                    checked = newValue
+                )
             } catch (e: Exception) {
+                // Rollback UI state on failure
+                _ui.update { it.copy(groceryItems = previousItems) }
                 toast("Failed to update item: ${e.message}")
             }
         }
