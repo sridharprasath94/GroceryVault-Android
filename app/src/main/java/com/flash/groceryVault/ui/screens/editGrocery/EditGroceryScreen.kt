@@ -14,7 +14,7 @@ import com.flash.groceryVault.data.SuggestionType
 import com.flash.groceryVault.di.AppContainer
 import com.flash.groceryVault.ui.components.AddRowButton
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
-import com.flash.groceryVault.ui.components.GroceryItemRow
+import com.flash.groceryVault.ui.components.GroceryFormField
 import com.flash.groceryVault.ui.components.SectionCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,7 +117,7 @@ fun EditGroceryScreen(
 
                 SectionCard(title = "Groceries") {
                     items.forEachIndexed { idx, row ->
-                        GroceryItemRow(
+                        GroceryFormField(
                             index = idx + 1,
                             groceryItems = row,
                             suggestions = suggestions,

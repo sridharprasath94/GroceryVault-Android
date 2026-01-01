@@ -117,6 +117,8 @@ class CreateGroceryViewModel(
         emitIfAllowed(CreateGroceryEvent.OnFinishedSaving(id))
     }
 
+    fun requestBack() = emitIfAllowed(CreateGroceryEvent.OnBackClicked)
+
     private fun toast(message: String) {
         emitIfAllowed(CreateGroceryEvent.Toast(message))
     }

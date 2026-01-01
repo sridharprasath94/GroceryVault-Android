@@ -1,18 +1,28 @@
 package com.flash.groceryVault.ui.components
 
-import androidx.compose.foundation.layout.*
+import MatchMode
+import SuggestionAutoCompleteField
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun GroceryItemRow(
+fun GroceryFormField(
     index: Int,
     groceryItems: GroceryItemFormRow,
     onChange: (GroceryItemFormRow) -> Unit,
@@ -38,11 +48,11 @@ fun GroceryItemRow(
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SuggestionAutoCompleteField(
-                value = TextFieldValue(groceryItems.name),
-                onValueChange = { onChange(groceryItems.copy(name = it.text)) },
+                value = groceryItems.name,
+                onValueChange = { onChange(groceryItems.copy(name = it)) },
                 suggestions = suggestions,
                 label = "Grocery item",
-                matchMode = MatchMode.Prefix,
+                matchMode = MatchMode.Contains,
                 showDropdownIcon = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -57,8 +67,14 @@ fun GroceryItemRow(
         }
 
         if (onRemove != null) {
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, contentDescription = "Remove item")
+            IconButton(
+                modifier = Modifier.weight(0.2f),
+                onClick = onRemove
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remove item"
+                )
             }
         }
     }
