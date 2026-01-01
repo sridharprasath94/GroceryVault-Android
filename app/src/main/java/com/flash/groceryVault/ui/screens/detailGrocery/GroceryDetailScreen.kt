@@ -1,72 +1,203 @@
 package com.flash.groceryVault.ui.screens.detailGrocery
 
-import android.text.format.DateFormat
-import androidx.compose.foundation.layout.*
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.flash.groceryVault.di.AppContainer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import com.flash.groceryVault.ui.components.SectionCard
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroceryDetailScreen(
-    container: AppContainer,
-    listId: Long,
+    vm: GroceryDetailViewModel,
     onBack: () -> Unit,
     onEdit: () -> Unit,
 ) {
-    val vm = remember(listId) { GroceryDetailViewModel(container, listId) }
-    val data by vm.data.collectAsState()
+    val ui by vm.ui.collectAsState()
+    val context = LocalContext.current
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            vm.onScreenVisible()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        vm.events.collectLatest { event ->
+            when (event) {
+                is GroceryDetailEvent.Toast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+
+                is GroceryDetailEvent.OnEditClicked -> {
+                    vm.startNavigation()
+                    onEdit()
+                }
+
+                GroceryDetailEvent.OnBackClicked -> {
+                    vm.startNavigation()
+                    onBack()
+                }
+            }
+        }
+    }
+
+
+    GroceryDetailForm(
+        ui = ui,
+        onBack = vm::requestBack,
+        onEdit = vm::requestEdit,
+        onToggleItemChecked = vm::toggleChecked,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun GroceryDetailTopBar(
+    isInteractionEnabled: Boolean,
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
+) {
+    Box {
+        TopAppBar(
+            title = { Text("Grocery List") },
+            navigationIcon = {
+                IconButton(onClick = onBack, enabled = isInteractionEnabled) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Close"
+                    )
+                }
+            },
+            actions = {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit"
+                    )
+                }
+            }
+        )
+        if (!isInteractionEnabled) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) { /* block touches */ }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GroceryDetailForm(
+    ui: GroceryDetailUiState,
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
+    onToggleItemChecked: (Boolean) -> Unit,
+) {
+    val isInteractionEnabled = !ui.isNavigating && !ui.isLoadingData
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Grocery List") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") } },
-                actions = { IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") } }
+            GroceryDetailTopBar(
+                isInteractionEnabled = isInteractionEnabled,
+                onBack = onBack,
+                onEdit = onEdit
             )
         }
     ) { padding ->
-        if (data == null) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
-
-        val d = data!!
-        val dt = DateFormat.format("dd MMM yyyy, HH:mm", d.list.createdAt).toString()
-
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(12.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(d.list.title, style = MaterialTheme.typography.headlineSmall)
-            Text(dt, style = MaterialTheme.typography.bodySmall)
+            if (ui.isLoadingData) {
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Loading…")
+                    Spacer(Modifier.height(12.dp))
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(12.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        Text(ui.title, style = MaterialTheme.typography.headlineSmall)
+                    }
 
-            if (!d.list.description.isNullOrBlank()) {
-                Text(d.list.description!!, style = MaterialTheme.typography.bodyLarge)
-            }
+                    item {
+                        Text(ui.createdAt, style = MaterialTheme.typography.bodySmall)
+                    }
 
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Items", style = MaterialTheme.typography.titleMedium)
+                    if (!ui.description.isNullOrBlank()) {
+                        item {
+                            Text(ui.description, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
 
-                    d.items.sortedBy { it.sortOrder }.forEach { item ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = item.isChecked,
-                                onCheckedChange = { vm.toggleChecked(item.id, it) }
-                            )
-                            Text(item.name, style = MaterialTheme.typography.bodyLarge)
+                    item {
+                        SectionCard(title = "Groceries") {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ui.groceryItems.forEach { item ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Checkbox(
+                                            checked = item.isChecked,
+                                            onCheckedChange = { onToggleItemChecked(item.isChecked) }
+                                        )
+                                        Text(
+                                            text = item.name,
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -74,3 +205,4 @@ fun GroceryDetailScreen(
         }
     }
 }
+

@@ -18,6 +18,7 @@ import com.flash.groceryVault.ui.screens.auth.AuthViewModel
 import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryScreen
 import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryViewModel
 import com.flash.groceryVault.ui.screens.detailGrocery.GroceryDetailScreen
+import com.flash.groceryVault.ui.screens.detailGrocery.GroceryDetailViewModel
 import com.flash.groceryVault.ui.screens.editGrocery.EditGroceryScreen
 import com.flash.groceryVault.ui.screens.editGrocery.EditGroceryViewModel
 import com.flash.groceryVault.ui.screens.listGrocery.GroceryListScreen
@@ -86,7 +87,12 @@ fun AppRoot(container: AppContainer) {
         }
 
         composable(Routes.CREATE) {
-            val vm = remember { CreateGroceryViewModel(container) }
+            val vm = remember {
+                CreateGroceryViewModel(
+                    container.groceryRepositoryForCurrentUser,
+                    container.suggestionsRepository,
+                )
+            }
             CreateGroceryScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
@@ -102,9 +108,14 @@ fun AppRoot(container: AppContainer) {
             arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { backStack ->
             val id = backStack.arguments?.getLong("id") ?: return@composable
+            val vm = remember {
+                GroceryDetailViewModel(
+                    container.groceryRepositoryForCurrentUser,
+                    id,
+                )
+            }
             GroceryDetailScreen(
-                container = container,
-                listId = id,
+                vm = vm,
                 onBack = { nav.popBackStack() },
                 onEdit = { nav.navigate("${Routes.EDIT}/$id") }
             )
@@ -115,9 +126,15 @@ fun AppRoot(container: AppContainer) {
             arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { backStack ->
             val id = backStack.arguments?.getLong("id") ?: return@composable
-            val vm = remember { EditGroceryViewModel(container, id) }
+            val vm = remember {
+                EditGroceryViewModel(
+                    container.groceryRepositoryForCurrentUser,
+                    container.suggestionsRepository,
+                    id,
+                )
+            }
             EditGroceryScreen(
-                vm =  vm,
+                vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = { nav.popBackStack() }
             )
