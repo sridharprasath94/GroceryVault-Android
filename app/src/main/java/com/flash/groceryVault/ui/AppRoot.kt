@@ -96,9 +96,8 @@ fun AppRoot(container: AppContainer) {
             CreateGroceryScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
-                onCreated = { id ->
+                onCreated = { _ ->
                     nav.popBackStack()
-                    nav.navigate("${Routes.DETAIL}/$id")
                 }
             )
         }

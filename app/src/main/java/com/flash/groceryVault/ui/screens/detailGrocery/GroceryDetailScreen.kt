@@ -127,7 +127,7 @@ fun GroceryDetailForm(
     ui: GroceryDetailUiState,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onToggleItemChecked: (Boolean) -> Unit,
+    onToggleItemChecked: (Long, Boolean) -> Unit,
 ) {
     val isInteractionEnabled = !ui.isNavigating && !ui.isLoadingData
     Scaffold(
@@ -189,7 +189,12 @@ fun GroceryDetailForm(
                                     ) {
                                         Checkbox(
                                             checked = item.isChecked,
-                                            onCheckedChange = { onToggleItemChecked(item.isChecked) }
+                                            onCheckedChange = {
+                                                onToggleItemChecked(
+                                                    item.id,
+                                                    !item.isChecked
+                                                )
+                                            }
                                         )
                                         Text(
                                             text = item.name,
