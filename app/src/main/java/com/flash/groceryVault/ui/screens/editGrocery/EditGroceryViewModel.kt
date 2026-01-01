@@ -3,12 +3,22 @@ package com.flash.groceryVault.ui.screens.editGrocery
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flash.groceryVault.data.GroceryListWithItems
+import com.flash.groceryVault.data.GroceryRepository
 import com.flash.groceryVault.data.SuggestionType
-import com.flash.groceryVault.di.AppContainer
+import com.flash.groceryVault.data.SuggestionsRepository
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
-import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryEvent
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed interface EditGroceryEvent {
@@ -28,13 +38,10 @@ data class EditGroceryUiState(
 )
 
 class EditGroceryViewModel(
-    container: AppContainer,
+    val groceryRepository: GroceryRepository,
+    val suggestionsRepository: SuggestionsRepository,
     private val listId: Long,
 ) : ViewModel() {
-
-    private val groceryRepository = container.groceryRepositoryForCurrentUser
-    private val suggestionsRepository = container.suggestionsRepository
-
     private val _ui = MutableStateFlow(EditGroceryUiState())
     val ui: StateFlow<EditGroceryUiState> = _ui.asStateFlow()
 
@@ -161,39 +168,6 @@ class EditGroceryViewModel(
     private fun emitIfAllowed(event: EditGroceryEvent) {
         if (!_ui.value.isNavigating) {
             _events.tryEmit(event)
-        }
-    }
-
-    fun save(
-        title: String,
-        description: String?,
-        items: List<Pair<String, Boolean>>,
-        onDone: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val cleanTitle = title.trim()
-        if (cleanTitle.isBlank()) {
-            onError("Title is required")
-            return
-        }
-
-        viewModelScope.launch {
-            _ui.value = _ui.value.copy(isSaving = true)
-            runCatching {
-                groceryRepository.updateList(
-                    id = listId,
-                    title = cleanTitle,
-                    description = description,
-                    items = items
-                )
-                suggestionsRepository.addMany(SuggestionType.GROCERY_ITEM, items.map { it.first })
-            }.onSuccess {
-                _ui.value = _ui.value.copy(isSaving = false)
-                onDone()
-            }.onFailure {
-                _ui.value = _ui.value.copy(isSaving = false)
-                onError(it.message ?: "Save failed")
-            }
         }
     }
 }

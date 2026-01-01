@@ -2,7 +2,9 @@ package com.flash.groceryVault.ui.screens.createGrocery
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flash.groceryVault.data.GroceryRepository
 import com.flash.groceryVault.data.SuggestionType
+import com.flash.groceryVault.data.SuggestionsRepository
 import com.flash.groceryVault.di.AppContainer
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import kotlinx.coroutines.channels.BufferOverflow
@@ -34,12 +36,9 @@ data class CreateGroceryUiState(
 )
 
 class CreateGroceryViewModel(
-    container: AppContainer
+    val groceryRepository: GroceryRepository,
+    val suggestionsRepository: SuggestionsRepository,
 ) : ViewModel() {
-
-    private val groceryRepository = container.groceryRepositoryForCurrentUser
-    private val suggestionsRepository = container.suggestionsRepository
-
     private val _ui = MutableStateFlow(CreateGroceryUiState())
     val ui: StateFlow<CreateGroceryUiState> = _ui.asStateFlow()
 
