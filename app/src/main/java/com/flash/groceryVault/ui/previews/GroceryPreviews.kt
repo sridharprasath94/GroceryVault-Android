@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.data.GroceryListEntity
 import com.flash.groceryVault.ui.screens.listGrocery.GroceryListCard
-import com.flash.groceryVault.ui.screens.listGrocery.GroceryListRowUi
+import com.flash.groceryVault.ui.screens.listGrocery.GroceryListItem
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
 @Preview(showBackground = true)
@@ -12,7 +12,7 @@ import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 fun GroceryListCardPreview() {
     GroceryVaultTheme {
         GroceryListCard(
-            row = GroceryListRowUi(
+            groceryListItem = GroceryListItem(
                 list = GroceryListEntity(
                     id = 1,
                     title = "Weekly groceries",

@@ -76,8 +76,8 @@ fun AppRoot(container: AppContainer) {
             GroceryListScreen(
                 vm = vm,
                 onCreate = { nav.navigate(Routes.CREATE) },
-                onOpen = { id -> nav.navigate("${Routes.DETAIL}/$id") },
-                onEdit = { id -> nav.navigate("${Routes.EDIT}/$id") },
+                onOpenGroceryItem = { id -> nav.navigate("${Routes.DETAIL}/$id") },
+                onEditGroceryItem = { id -> nav.navigate("${Routes.EDIT}/$id") },
                 onLoggedOut = {
                     nav.navigate(Routes.AUTH) {
                         popUpTo(Routes.LIST) { inclusive = true }
