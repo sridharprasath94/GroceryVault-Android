@@ -158,14 +158,6 @@ fun GroceryListScreen(
         }
     }
 
-    GroceryListDialogs(
-        showLogoutDialog = ui.showLogoutDialog,
-        onDismissLogout = vm::dismissLogout,
-        onConfirmLogout = vm::confirmLogout,
-        showDeleteDialog = ui.showDeleteDialog,
-        onDismissDelete = vm::dismissDelete,
-        onConfirmDelete = vm::confirmDelete,
-    )
 
     GroceryListContent(
         ui = ui,
@@ -177,6 +169,14 @@ fun GroceryListScreen(
         onMenuDismiss = vm::onMenuDismiss,
         onSyncNow = vm::syncNowWithCloud,
         onRequestLogout = vm::requestLogout,
+    )
+    GroceryListDialogs(
+        showLogoutDialog = ui.showLogoutDialog,
+        onDismissLogout = vm::dismissLogout,
+        onConfirmLogout = vm::confirmLogout,
+        showDeleteDialog = ui.showDeleteDialog,
+        onDismissDelete = vm::dismissDelete,
+        onConfirmDelete = vm::confirmDelete,
     )
 }
 
@@ -242,7 +242,9 @@ fun GroceryListContent(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Log out") },
+                                    text = {
+                                        Text("Log out")
+                                    },
                                     trailingIcon = {
                                         Icon(
                                             Icons.Default.Logout,

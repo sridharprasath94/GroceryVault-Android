@@ -43,11 +43,13 @@ fun fakeGroceryListUiState(): GroceryListUiState =
         isNavigating = false
     )
 
-fun fakeLoadedState() = fakeGroceryListUiState()
+fun fakeLoadedState() =
+    fakeGroceryListUiState()
 
 fun fakeLoadingState() =
     fakeGroceryListUiState().copy(
-        isLoadingData = true
+        isLoadingData = true,
+        groceryListItems = emptyList()
     )
 
 fun fakeEmptyState() =
@@ -56,21 +58,10 @@ fun fakeEmptyState() =
         isLoadingData = false
     )
 
-fun fakeSyncingState() =
-    fakeGroceryListUiState().copy(
-        isSyncing = true,
-        isCloudSynced = false
-    )
-
 fun fakeMenuOpenState() =
     fakeGroceryListUiState().copy(
-        showMenu = true
-    )
-
-fun fakeDeleteDialogState() =
-    fakeGroceryListUiState().copy(
-        isLoadingData = false,
-        deleteListId = 1L
+        showMenu = true,
+        isNavigating = false
     )
 
 @Composable
@@ -147,32 +138,4 @@ fun GroceryListPreview_Empty() {
 @Composable
 fun GroceryListPreview_MenuOpen() {
     GroceryListPreviewWrapper(fakeMenuOpenState())
-}
-
-@Preview(
-    name = "Syncing",
-    showBackground = true
-)
-@Preview(
-    name = "Syncing – Dark",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun GroceryListPreview_Syncing() {
-    GroceryListPreviewWrapper(fakeSyncingState())
-}
-
-@Preview(
-    name = "Delete Dialog",
-    showBackground = true
-)
-@Preview(
-    name = "Delete Dialog – Dark",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun GroceryListPreview_DeleteDialog() {
-    GroceryListPreviewWrapper(fakeDeleteDialogState())
 }
