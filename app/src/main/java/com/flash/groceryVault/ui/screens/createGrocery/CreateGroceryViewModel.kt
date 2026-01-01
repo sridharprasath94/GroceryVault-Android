@@ -38,7 +38,7 @@ class CreateGroceryViewModel(
 ) : ViewModel() {
 
     private val groceryRepository = container.groceryRepositoryForCurrentUser
-    private val suggestionsRepo = container.suggestionsRepository
+    private val suggestionsRepository = container.suggestionsRepository
 
     private val _ui = MutableStateFlow(CreateGroceryUiState())
     val ui: StateFlow<CreateGroceryUiState> = _ui.asStateFlow()
@@ -53,7 +53,7 @@ class CreateGroceryViewModel(
     init {
         // Observe suggestions
         viewModelScope.launch {
-            suggestionsRepo.observeAllMerged(SuggestionType.GROCERY_ITEM).collect { suggestions ->
+            suggestionsRepository.observeAllMerged(SuggestionType.GROCERY_ITEM).collect { suggestions ->
                 _ui.update { it.copy(suggestions = suggestions) }
             }
         }
@@ -101,7 +101,7 @@ class CreateGroceryViewModel(
             try {
                 _ui.value = _ui.value.copy(isSaving = true)
                 val id = groceryRepository.createList(cleanTitle, cleanDesc, items)
-                suggestionsRepo.addMany(SuggestionType.GROCERY_ITEM, items)
+                suggestionsRepository.addMany(SuggestionType.GROCERY_ITEM, items)
                 onFinishedSaving(id)
             } catch (e: Exception) {
                 toast(e.message ?: "Failed to save")

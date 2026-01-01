@@ -1,6 +1,5 @@
 package com.flash.groceryVault.ui
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +19,7 @@ import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryScreen
 import com.flash.groceryVault.ui.screens.createGrocery.CreateGroceryViewModel
 import com.flash.groceryVault.ui.screens.detailGrocery.GroceryDetailScreen
 import com.flash.groceryVault.ui.screens.editGrocery.EditGroceryScreen
+import com.flash.groceryVault.ui.screens.editGrocery.EditGroceryViewModel
 import com.flash.groceryVault.ui.screens.listGrocery.GroceryListScreen
 import com.flash.groceryVault.ui.screens.listGrocery.GroceryListViewModel
 
@@ -115,9 +115,9 @@ fun AppRoot(container: AppContainer) {
             arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { backStack ->
             val id = backStack.arguments?.getLong("id") ?: return@composable
+            val vm = remember { EditGroceryViewModel(container, id) }
             EditGroceryScreen(
-                container = container,
-                listId = id,
+                vm =  vm,
                 onBack = { nav.popBackStack() },
                 onSaved = { nav.popBackStack() }
             )
