@@ -1,129 +1,146 @@
 package com.flash.groceryVault.ui.screens.createGrocery
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import com.flash.groceryVault.data.SuggestionType
-import com.flash.groceryVault.di.AppContainer
-import com.flash.groceryVault.ui.components.AddRowButton
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import com.flash.groceryVault.ui.components.FormTopBar
+import com.flash.groceryVault.ui.components.GroceryForm
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
-import com.flash.groceryVault.ui.components.GroceryItemRow
-import com.flash.groceryVault.ui.components.SectionCard
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import rememberAnimatedImeBottomPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGroceryScreen(
-    container: AppContainer,
+    vm: CreateGroceryViewModel,
     onBack: () -> Unit,
     onCreated: (Long) -> Unit,
 ) {
-    val vm = remember { CreateGroceryViewModel(container) }
     val ui by vm.ui.collectAsState()
     val context = LocalContext.current
 
-    val suggestions by container.suggestionsRepository
-        .observeAllMerged(SuggestionType.GROCERY_ITEM)
-        .collectAsState(initial = emptyList())
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            vm.onScreenVisible()
+        }
+    }
+    LaunchedEffect(Unit) {
+        vm.events.collectLatest { event ->
+            when (event) {
+                is CreateGroceryEvent.Toast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
 
-    var title by rememberSaveable { mutableStateOf("") }
-    var desc by rememberSaveable { mutableStateOf("") }
-    val items = remember { mutableStateListOf(GroceryItemFormRow()) }
+                is CreateGroceryEvent.OnFinishedSaving -> {
+                    vm.startNavigation()
+                    onCreated(event.id)
+                }
 
-    var error by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(error) {
-        error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            error = null
+                CreateGroceryEvent.OnBackClicked -> {
+                    vm.startNavigation()
+                    onBack()
+                }
+            }
         }
     }
 
+    CreateGroceryForm(
+        ui = ui,
+        onBack = vm::requestBack,
+        onSave = {
+            keyboardController?.hide()
+            vm.save()
+        },
+        onTitleChange = vm::updateTitle,
+        onDescriptionChange = vm::updateDescription,
+        onItemChange = vm::onGroceryItemChanged,
+        onItemRemove = vm::onGroceryItemRemoved,
+        onAddItem = {
+            vm.onAddGroceryItem()
+            scope.launch {
+                listState.animateScrollToItem(ui.groceryItems.lastIndex)
+            }
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateGroceryForm(
+    ui: CreateGroceryUiState,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onTitleChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onItemChange: (Int, GroceryItemFormRow) -> Unit,
+    onItemRemove: (Int) -> Unit,
+    onAddItem: () -> Unit,
+) {
+    val imePadding = rememberAnimatedImeBottomPadding()
+    val isInteractionEnabled = !ui.isNavigating && !ui.isSaving
+
     Scaffold(
+        modifier = Modifier.padding(bottom = imePadding),
         topBar = {
-            TopAppBar(
-                title = { Text("New Grocery List") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") } },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            vm.save(
-                                title = title,
-                                description = desc.trim().ifEmpty { null },
-                                items = items.map { it.name },
-                                onDone = onCreated,
-                                onError = { error = it }
-                            )
-                        },
-                        enabled = !ui.isSaving
-                    ) { Text("Save") }
-                }
+            FormTopBar(
+                title = "New Grocery List",
+                actionLabel = "Save",
+                isInteractionEnabled = isInteractionEnabled,
+                isActionInProgress = ui.isSaving,
+                onBack = onBack,
+                onPrimaryAction = onSave
             )
         }
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(12.dp)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Title") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = desc,
-                    onValueChange = { desc = it },
-                    label = { Text("Notes (optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                SectionCard(title = "Groceries") {
-                    items.forEachIndexed { idx, row ->
-                        GroceryItemRow(
-                            index = idx + 1,
-                            row = row,
-                            suggestions = suggestions,
-                            onChange = { items[idx] = it },
-                            onRemove = if (items.size > 1) ({ items.removeAt(idx) }) else null
-                        )
-                        if (idx != items.lastIndex) Spacer(Modifier.height(10.dp))
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-                    AddRowButton(
-                        text = "Add item",
-                        onClick = { items.add(GroceryItemFormRow()) }
-                    )
-                }
-            }
+            GroceryForm(
+                padding = padding,
+                title = ui.title,
+                onTitleChange = onTitleChange,
+                description = ui.description,
+                onDescriptionChange = onDescriptionChange,
+                groceryItems = ui.groceryItems,
+                suggestions = ui.suggestions,
+                onItemChange = onItemChange,
+                onItemRemove = onItemRemove,
+                onAddItem = onAddItem,
+            )
 
             if (ui.isSaving) {
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                    ) {}
-                    CircularProgressIndicator()
-                }
+                        .background(
+                            MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
+                        )
+                )
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
         }
     }

@@ -1,203 +1,118 @@
 package com.flash.groceryVault.ui.components
+
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flash.groceryVault.ui.model.SuggestionsUi
-import com.flash.groceryVault.ui.theme.GroceryVaultTheme
-
-data class IngredientFormRow(
-    val name: String = "",
-    val qty: String = "",
-    val unit: String = ""
-)
 
 @Composable
-fun IngredientItem(
-    index: Int,
-    suggestions: SuggestionsUi,
-    row: IngredientFormRow,
-    onChange: (IngredientFormRow) -> Unit,
-    onRemove: (() -> Unit)? = null,
+fun GroceryForm(
+    padding: PaddingValues,
+    title: String,
+    isLoading: Boolean = false,
+    onTitleChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    groceryItems: List<GroceryItemFormRow>,
+    suggestions: List<String>,
+    onItemChange: (index: Int, GroceryItemFormRow) -> Unit,
+    onItemRemove: (index: Int) -> Unit,
+    onAddItem: () -> Unit,
 ) {
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
-        ) {
-            Text(
-                text = index.toString(),
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Column(
-            modifier = Modifier.weight(2f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            SuggestionAutoCompleteField(
-                value = row.name,
-                onValueChange = {
-                    onChange(row.copy(name = it))
-                },
-                suggestions = suggestions.ingredients,
-                label = "Ingredient",
-                showDropdownIcon = true,
-                matchMode = MatchMode.Contains
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+        if (isLoading) {
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                OutlinedTextField(
-                    value = row.qty,
-                    onValueChange = { newValue ->
-                        // numbers + decimal + comma (EU)
-                        val filtered =
-                            newValue.filter { it.isDigit() || it == '.' || it == ',' }
-                        onChange(row.copy(qty = filtered))
-                    },
-                    label = { Text("Qty") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal
-                    ),
-                    modifier = Modifier.weight(0.4f)
-                )
+                Text("Loading…")
+                Spacer(Modifier.height(12.dp))
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = onTitleChange,
+                        label = { Text("Title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = onDescriptionChange,
+                        label = { Text("Notes (optional)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                item {
+                    SectionCard(title = "Groceries") {
+                        if (groceryItems.isEmpty()) {
+                            Text(
+                                "No items added.",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        } else {
+                            groceryItems.forEachIndexed { idx, row ->
+                                GroceryFormField(
+                                    index = idx + 1,
+                                    groceryItems = row,
+                                    suggestions = suggestions,
+                                    onChange = { updated ->
+                                        onItemChange(idx, updated)
+                                    },
+                                    onRemove = { onItemRemove(idx) }
+                                )
 
-                SuggestionAutoCompleteField(
-                    modifier = Modifier.weight(0.6f),
-                    value = row.unit,
-                    onValueChange = { onChange(row.copy(unit = it)) },
-                    suggestions = suggestions.units,
-                    label = "Unit",
-                    showDropdownIcon = true,
-                    matchMode = MatchMode.Contains
-                )
+                                if (idx != groceryItems.lastIndex) {
+                                    Spacer(Modifier.height(12.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+                item {
+                    AddRowButton(
+                        text = "Add item",
+                        onClick = onAddItem
+                    )
+                }
             }
         }
-        if (onRemove != null) {
-            IconButton(
-                modifier = Modifier.weight(0.2f),
-                onClick = onRemove
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Remove ingredient"
-                )
-            }
-        }
+
     }
 }
 
-@Composable
-fun StepItemRow(
-    s: String,
-    suggestions: SuggestionsUi,
-    idx: Int,
-    onChange: (String) -> Unit,
-    onRemove: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
-        ) {
-            Text(
-                text = idx.toString(),
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
 
-        SuggestionAutoCompleteField(
-            modifier = Modifier.weight(2f),
-            value = s,
-            onValueChange = {
-                onChange(it)
-            },
-            suggestions = suggestions.steps,
-            label = "Step $idx",
-            showDropdownIcon = false,
-            matchMode = MatchMode.Contains
-        )
-
-        if (onRemove != null) {
-            IconButton(
-                modifier = Modifier.weight(0.2f),
-                onClick = onRemove
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Remove ingredient"
-                )
-            }
-        }
-    }
-}
-
-@Preview(name = "Ingredient Item Preview", showBackground = true, widthDp = 360)
-@Composable
-private fun IngredientItemPreview() {
-    GroceryVaultTheme {
-        IngredientItem(
-            index = 1,
-            suggestions = SuggestionsUi(),
-            row = IngredientFormRow(
-                name = "Onion",
-                qty = "2",
-                unit = "medium"
-            ),
-            onChange = {},
-            onRemove = {}
-        )
-    }
-}
-
-@Preview(name = "Step Item Row Preview", showBackground = true, widthDp = 360)
-@Composable
-private fun StepItemRowPreview() {
-    GroceryVaultTheme {
-        StepItemRow(
-            s = "Chop the onions finely.",
-            suggestions = SuggestionsUi(),
-            idx = 1,
-            onChange = {},
-            onRemove = {}
-        )
-    }
-}
 
 
 
