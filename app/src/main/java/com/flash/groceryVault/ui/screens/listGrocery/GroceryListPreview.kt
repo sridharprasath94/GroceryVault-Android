@@ -81,9 +81,7 @@ private fun GroceryListContentPreviewWrapper(
 @Composable
 fun GroceryListContentPreview_Loaded() {
     GroceryListContentPreviewWrapper(
-        fakeGroceryListUiState(
-            isLoadingData = true,
-        )
+        fakeGroceryListUiState()
     )
 }
 
