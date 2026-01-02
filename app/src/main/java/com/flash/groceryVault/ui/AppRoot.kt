@@ -37,7 +37,7 @@ fun AppRoot(container: AppContainer) {
     val nav = rememberNavController()
 
     val authVm = remember { AuthViewModel() }
-    val authState by authVm.state.collectAsState()
+    val authState = authVm.ui.collectAsState().value.authState
 
     // seed suggestion defaults once (after first composition)
     LaunchedEffect(Unit) {

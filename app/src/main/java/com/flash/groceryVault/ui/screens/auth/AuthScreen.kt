@@ -36,7 +36,6 @@ fun AuthScreen(
     vm: AuthViewModel,
     onLoggedIn: () -> Unit
 ) {
-    val state by vm.state.collectAsState()
     val ui by vm.ui.collectAsState()
     val context = LocalContext.current
 
@@ -74,35 +73,14 @@ fun AuthScreen(
         }
     }
 
-
-    Scaffold { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            AuthFormContent(
-                padding = padding,
-                email = ui.email,
-                onEmailChange = vm::onEmailChange,
-                password = ui.password,
-                onPasswordChange = vm::onPasswordChange,
-                state = state,
-                onSignIn = vm::submitSignIn,
-                onSignUp = vm::submitSignUp,
-                onGoogleSignIn = { vm.onGoogleSignInClicked(webClientId) }
-            )
-
-            if (ui.isNavigating) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
-                        )
-                )
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
-    }
+    AuthFormContent(
+        ui = ui,
+        onEmailChange = vm::onEmailChange,
+        onPasswordChange = vm::onPasswordChange,
+        onSignIn = vm::submitSignIn,
+        onSignUp = vm::submitSignUp,
+        onGoogleSignIn = { vm.onGoogleSignInClicked(webClientId) }
+    )
 }
 
 
@@ -117,65 +95,79 @@ fun googleSignInClient(id: String, context: Context): GoogleSignInClient = Googl
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthFormContent(
-    padding: PaddingValues,
-    email: String,
+    ui: AuthFormUiState,
     onEmailChange: (String) -> Unit,
-    password: String,
     onPasswordChange: (String) -> Unit,
-    state: AuthState,
     onSignIn: () -> Unit,
     onSignUp: () -> Unit,
     onGoogleSignIn: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .padding(padding)
-            .padding(20.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(
-            space = 12.dp,
-            alignment = Alignment.CenterVertically
-        ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        StandardTextField(
-            value = email,
-            onValueChange = onEmailChange,
-            label = "Email",
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardType = KeyboardType.Email,
-        )
+    Scaffold { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(20.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(
+                    space = 12.dp,
+                    alignment = Alignment.CenterVertically
+                ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                StandardTextField(
+                    value = ui.email,
+                    onValueChange = onEmailChange,
+                    label = "Email",
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardType = KeyboardType.Email,
+                )
 
-        StandardTextField(
-            value = password,
-            onValueChange = onPasswordChange,
-            label = "Password",
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
+                StandardTextField(
+                    value = ui.password,
+                    onValueChange = onPasswordChange,
+                    label = "Password",
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
 
-        if (state is AuthState.Loading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                if (ui.authState is AuthState.Loading) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+
+                Spacer(Modifier.height(60.dp))
+
+                Button(
+                    onClick = onSignIn,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Sign in") }
+
+                OutlinedButton(
+                    onClick = onSignUp,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Create account") }
+
+                GoogleSignInButton(
+                    onClick = onGoogleSignIn,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            if (ui.isNavigating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
+                        )
+                )
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
         }
 
-        Spacer(Modifier.height(60.dp))
-
-        Button(
-            onClick = onSignIn,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("Sign in") }
-
-        OutlinedButton(
-            onClick = onSignUp,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("Create account") }
-
-        GoogleSignInButton(
-            onClick = onGoogleSignIn,
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
 
