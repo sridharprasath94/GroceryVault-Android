@@ -1,3 +1,4 @@
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.WindowInsets
@@ -82,7 +83,7 @@ fun SuggestionAutoCompleteField(
                 }
             }
         )
-        ExposedDropdownMenu (
+        ExposedDropdownMenu(
             expanded = showMenu,
             onDismissRequest = { expanded = false },
             matchAnchorWidth = true,
@@ -159,6 +160,10 @@ fun rememberAnimatedImeBottomPadding(extra: Dp = 0.dp): Dp {
 }
 
 @Preview(name = "With dropdown icon", showBackground = true, widthDp = 360)
+@Preview(
+    name = "With dropdown icon - Dark", showBackground = true, widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun SuggestionAutoCompleteFieldPreview() {
     var ingredientValue by remember {
@@ -176,6 +181,10 @@ private fun SuggestionAutoCompleteFieldPreview() {
 
 
 @Preview(name = "Without dropdown icon", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Without dropdown icon - Dark", showBackground = true, widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun SuggestionAutoCompleteFieldWithoutDropdownPreview() {
     var ingredientValue by remember {

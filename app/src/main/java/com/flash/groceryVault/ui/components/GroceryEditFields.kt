@@ -1,5 +1,6 @@
 package com.flash.groceryVault.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,9 +40,13 @@ fun GroceryEditFields(
 }
 
 /// Previews
-
-
 @Preview(name = "Grocery Edit Fields", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Grocery Edit Fields - Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun GroceryBasicFieldsPreview() {
     GroceryVaultTheme {
@@ -55,6 +60,12 @@ private fun GroceryBasicFieldsPreview() {
 }
 
 @Preview(name = "Grocery Edit Fields - Empty", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Grocery Edit Fields - Empty - Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun GroceryBasicFieldsEmptyPreview() {
     GroceryVaultTheme {

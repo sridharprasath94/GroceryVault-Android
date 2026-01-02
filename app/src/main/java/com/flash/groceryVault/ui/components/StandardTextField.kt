@@ -1,5 +1,6 @@
 package com.flash.groceryVault.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -32,6 +33,12 @@ fun StandardTextField(
 }
 
 @Preview(name = "Standard TextField Preview", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Standard TextField Preview (Dark)",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun StandardTextFieldPreview() {
     GroceryVaultTheme {
@@ -44,6 +51,12 @@ private fun StandardTextFieldPreview() {
 }
 
 @Preview(name = "Standard TextField Number Preview", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Standard TextField Number Preview (Dark)",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun StandardTextFieldNumberPreview() {
     GroceryVaultTheme {

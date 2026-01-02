@@ -1,5 +1,6 @@
 package com.flash.groceryVault.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,12 @@ fun GroceryImagePicker(
 }
 
 @Preview(name = "Image Section - With Image", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Image Section - With Image (Dark)",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 private fun GroceryImageSectionPreview_WithImage() {
     GroceryVaultTheme {
@@ -64,6 +71,12 @@ private fun GroceryImageSectionPreview_WithImage() {
 }
 
 @Preview(name = "Image Section - No Image", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Image Section - No Image (Dark)",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 private fun GroceryImageSectionPreview_None() {
     GroceryVaultTheme {
@@ -77,6 +90,12 @@ private fun GroceryImageSectionPreview_None() {
 }
 
 @Preview(name = "Image Section - Picked Uri", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Image Section - Picked Uri (Dark)",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 private fun GroceryImageSectionPreview_PickedUri() {
     GroceryVaultTheme {
@@ -90,6 +109,12 @@ private fun GroceryImageSectionPreview_PickedUri() {
 }
 
 @Preview(name = "Image Section - Existing Url", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Image Section - Existing Url (Dark)",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 private fun GroceryImageSectionPreview_ExistingUrl() {
     GroceryVaultTheme {

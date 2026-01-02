@@ -6,7 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.data.GroceryListEntity
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
-fun fakeGroceryListItems(): List<GroceryListItem> = listOf(
+private fun fakeGroceryListItems(): List<GroceryListItem> = listOf(
     GroceryListItem(
         list = GroceryListEntity(
             id = 1L,

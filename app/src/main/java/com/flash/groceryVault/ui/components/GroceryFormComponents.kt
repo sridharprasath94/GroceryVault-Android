@@ -9,15 +9,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
 @Composable
 fun GroceryForm(
@@ -101,14 +108,61 @@ fun GroceryForm(
                     }
                 }
                 item {
-                    AddRowButton(
-                        text = "Add item",
-                        onClick = onAddItem
-                    )
+                    OutlinedButton(onClick = onAddItem) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Add item")
+                    }
                 }
             }
         }
+    }
+}
 
+@Preview(
+    name = "Grocery Form – Light",
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 720
+)
+@Preview(
+    name = "Grocery Form – Dark",
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 720,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun GroceryFormLightPreview() {
+    GroceryVaultTheme {
+        GroceryForm(
+            padding = PaddingValues(0.dp),
+            title = "Weekly Groceries",
+            isLoading = false,
+            onTitleChange = {},
+            description = "Things to buy this weekend",
+            onDescriptionChange = {},
+            groceryItems = listOf(
+                GroceryItemFormRow(
+                    name = "Milk",
+                    isChecked = true,
+                ),
+                GroceryItemFormRow(
+                    name = "Bread",
+                    isChecked = false,
+                )
+            ),
+            suggestions = listOf(
+                "Milk",
+                "Bread",
+                "Eggs",
+                "Rice",
+                "Vegetables"
+            ),
+            onItemChange = { _, _ -> },
+            onItemRemove = {},
+            onAddItem = {}
+        )
     }
 }
 

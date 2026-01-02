@@ -1,5 +1,6 @@
 package com.flash.groceryVault.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,14 +67,22 @@ fun FormTopBar(
     }
 }
 
-@Preview
+@Preview(name = "Form Tab Bar", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Form Tab Bar - Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 fun FormTopBarPreview() {
-    FormTopBar(
-        title = "Edit Recipe",
-        actionLabel = "Save",
-        isInteractionEnabled = true,
-        onBack = {},
-        onPrimaryAction = {}
-    )
+    GroceryVaultTheme {
+        FormTopBar(
+            title = "Edit Recipe",
+            actionLabel = "Save",
+            isInteractionEnabled = true,
+            onBack = {},
+            onPrimaryAction = {}
+        )
+    }
 }

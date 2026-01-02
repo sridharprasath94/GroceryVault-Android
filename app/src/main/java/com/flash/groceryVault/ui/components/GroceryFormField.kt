@@ -2,6 +2,7 @@ package com.flash.groceryVault.ui.components
 
 import MatchMode
 import SuggestionAutoCompleteField
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
 @Composable
 fun GroceryFormField(
@@ -77,5 +80,38 @@ fun GroceryFormField(
                 )
             }
         }
+    }
+}
+
+@Preview(
+    name = "Grocery Field",
+    showBackground = true,
+    widthDp = 360
+)
+@Preview(
+    name = "Grocery Field – Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun GroceryFormFieldLightPreview() {
+    GroceryVaultTheme {
+        GroceryFormField(
+            index = 1,
+            groceryItems = GroceryItemFormRow(
+                name = "Milk",
+                isChecked = true,
+            ),
+            suggestions = listOf(
+                "Milk",
+                "Bread",
+                "Eggs",
+                "Rice",
+                "Vegetables"
+            ),
+            onChange = {},
+            onRemove = {},
+        )
     }
 }
