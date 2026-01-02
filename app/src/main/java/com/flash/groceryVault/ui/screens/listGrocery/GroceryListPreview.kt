@@ -5,6 +5,7 @@ import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.data.GroceryListEntity
+import com.flash.groceryVault.ui.data.GroceryListItem
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 import com.flash.groceryVault.ui.util.DateFormats
 

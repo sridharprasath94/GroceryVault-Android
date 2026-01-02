@@ -3,19 +3,20 @@ package com.flash.groceryVault.ui.screens.listGrocery
 import android.text.format.DateFormat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flash.groceryVault.data.GroceryListEntity
 import com.flash.groceryVault.di.AppContainer
+import com.flash.groceryVault.ui.data.GroceryListItem
 import com.flash.groceryVault.ui.util.DateFormats
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class GroceryListItem(
-    val title: String,
-    val createdAtText: String,
-    val detailText: String,
-    val list: GroceryListEntity,
-)
 
 data class GroceryListUiState(
     val currentUserUid: String = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous",
@@ -59,7 +60,7 @@ class GroceryListViewModel(
     private val container: AppContainer,
 ) : ViewModel() {
 
-    private val repo = container.groceryRepositoryForCurrentUser
+    private val groceryRepository = container.groceryRepositoryForCurrentUser
 
     private val _ui = MutableStateFlow(GroceryListUiState())
     val ui: StateFlow<GroceryListUiState> = _ui.asStateFlow()
@@ -69,11 +70,11 @@ class GroceryListViewModel(
 
     init {
         viewModelScope.launch {
-            repo.observeLists()
+            groceryRepository.observeLists()
                 .onStart { _ui.update { it.copy(isLoadingData = true) } }
-                .collect { lists ->
-                    val groceryListItems = lists.map { list ->
-                        val details = repo.getListWithItemsOnce(list.id)
+                .collect { groceryListEntities ->
+                    val groceryListItems = groceryListEntities.map { list ->
+                        val details = groceryRepository.getListWithItemsOnce(list.id)
                         val items = details?.items.orEmpty()
                         GroceryListItem(
                             title = list.title,
@@ -158,7 +159,7 @@ class GroceryListViewModel(
         val listId = _ui.value.deleteListId ?: return
         viewModelScope.launch {
             runCatching {
-                repo.deleteList(listId)
+                groceryRepository.deleteList(listId)
             }.onSuccess {
                 _ui.update { it.copy(deleteListId = null) }
                 emitIfAllowed(GroceryListEvent.Toast("Recipe deleted"))

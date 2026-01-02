@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flash.groceryVault.data.GroceryItemEntity
 import com.flash.groceryVault.data.GroceryRepository
+import com.flash.groceryVault.ui.util.DateFormats
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,7 +59,7 @@ class GroceryDetailViewModel(
                                 title = groceryListWithItems.list.title,
                                 description = groceryListWithItems.list.description,
                                 createdAt = DateFormat.format(
-                                    "dd MMM yyyy, HH:mm",
+                                    DateFormats.LIST_DATE_TIME_WITH_YEAR,
                                     groceryListWithItems.list.createdAt
                                 ).toString(),
                                 groceryItems = groceryListWithItems.items,
