@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
-import com.flash.groceryVault.util.GroceryAsyncImage
-import com.flash.groceryVault.util.GroceryImage
+import com.flash.groceryVault.ui.util.GroceryAsyncImage
+import com.flash.groceryVault.ui.util.GroceryImage
 
 @Composable
 fun GroceryImagePicker(

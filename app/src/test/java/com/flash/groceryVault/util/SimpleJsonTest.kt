@@ -1,5 +1,6 @@
 package com.flash.groceryVault.util
 
+import com.flash.groceryVault.ui.util.SimpleJson
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

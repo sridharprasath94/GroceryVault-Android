@@ -1,17 +1,20 @@
 package com.flash.groceryVault.ui.screens.listGrocery
 
+import android.text.format.DateFormat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flash.groceryVault.data.GroceryListEntity
 import com.flash.groceryVault.di.AppContainer
+import com.flash.groceryVault.ui.util.DateFormats
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class GroceryListItem(
+    val title: String,
+    val createdAtText: String,
+    val detailText: String,
     val list: GroceryListEntity,
-    val itemCount: Int = 0,
-    val checkedCount: Int = 0,
 )
 
 data class GroceryListUiState(
@@ -36,7 +39,7 @@ data class GroceryListUiState(
         }
     val syncSupportingText: String
         get() = if (lastSyncedAt > 0L) {
-            val dt = android.text.format.DateFormat.format("dd MMM, HH:mm", lastSyncedAt).toString()
+            val dt = DateFormat.format(DateFormats.LIST_DATE_TIME, lastSyncedAt).toString()
             "Last synced: $dt"
         } else {
             "Not synced yet"
@@ -69,14 +72,17 @@ class GroceryListViewModel(
             repo.observeLists()
                 .onStart { _ui.update { it.copy(isLoadingData = true) } }
                 .collect { lists ->
-                    // Build rows with counts (small lists: compute on the fly)
                     val groceryListItems = lists.map { list ->
                         val details = repo.getListWithItemsOnce(list.id)
                         val items = details?.items.orEmpty()
                         GroceryListItem(
+                            title = list.title,
                             list = list,
-                            itemCount = items.size,
-                            checkedCount = items.count { it.isChecked }
+                            createdAtText = DateFormat.format(
+                                DateFormats.LIST_DATE_TIME_WITH_YEAR,
+                                list.createdAt
+                            ).toString(),
+                            detailText = "${items.size} items • ${items.count { it.isChecked }} checked"
                         )
                     }
                     _ui.update {

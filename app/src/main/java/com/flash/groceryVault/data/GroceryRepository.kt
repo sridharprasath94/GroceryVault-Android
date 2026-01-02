@@ -1,9 +1,8 @@
 package com.flash.groceryVault.data
 
-import com.flash.groceryVault.util.SimpleJson
+import com.flash.groceryVault.ui.util.SimpleJson
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray
-import org.json.JSONObject
 
 class GroceryRepository(
     private val dao: GroceryDao,

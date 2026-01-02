@@ -1,31 +1,41 @@
 package com.flash.groceryVault.ui.screens.listGrocery
 
 import android.content.res.Configuration
+import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.data.GroceryListEntity
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
+import com.flash.groceryVault.ui.util.DateFormats
 
 private fun fakeGroceryListItems(): List<GroceryListItem> = listOf(
     GroceryListItem(
+        title = "Weekly Groceries",
+        createdAtText = DateFormat.format(
+            DateFormats.LIST_DATE_TIME_WITH_YEAR,
+            System.currentTimeMillis() - 86_400_000
+        ).toString(),
+        detailText = "12 items, 4 checked",
         list = GroceryListEntity(
             id = 1L,
             title = "Weekly Groceries",
             description = "Vegetables and fruits",
             createdAt = System.currentTimeMillis() - 86_400_000
         ),
-        itemCount = 12,
-        checkedCount = 4
     ),
     GroceryListItem(
+        title = "Party Shopping",
+        createdAtText = DateFormat.format(
+            DateFormats.LIST_DATE_TIME_WITH_YEAR,
+            System.currentTimeMillis() - 2 * 86_400_000
+        ).toString(),
+        detailText = "8 items, 0 checked",
         list = GroceryListEntity(
             id = 2L,
             title = "Party Shopping",
             description = "Snacks and drinks",
             createdAt = System.currentTimeMillis() - 2 * 86_400_000
         ),
-        itemCount = 8,
-        checkedCount = 0
     )
 )
 

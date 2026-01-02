@@ -3,7 +3,6 @@
 package com.flash.groceryVault.ui.screens.listGrocery
 
 import android.content.Context
-import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -276,7 +275,6 @@ fun GroceryListContent(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
-
             if (ui.groceryListItems.isEmpty()) {
                 Box(
                     Modifier
@@ -294,12 +292,12 @@ fun GroceryListContent(
                         .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(ui.groceryListItems) { grocery ->
+                    items(ui.groceryListItems) { groceryListItem ->
                         GroceryListCard(
-                            groceryListItem = grocery,
-                            onOpen = { onOpenGrocery(grocery.list.id) },
-                            onEdit = { onEditGrocery(grocery.list.id) },
-                            onDelete = { onDeleteGrocery(grocery.list.id) }
+                            groceryListItem = groceryListItem,
+                            onOpen = { onOpenGrocery(groceryListItem.list.id) },
+                            onEdit = { onEditGrocery(groceryListItem.list.id) },
+                            onDelete = { onDeleteGrocery(groceryListItem.list.id) }
                         )
                     }
                 }
@@ -325,9 +323,6 @@ fun GroceryListCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val dt = DateFormat.format("dd MMM yyyy, HH:mm", groceryListItem.list.createdAt).toString()
-    val detail = "${groceryListItem.itemCount} items • ${groceryListItem.checkedCount} checked"
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -345,9 +340,9 @@ fun GroceryListCard(
             Column(Modifier.weight(1f)) {
                 Text(groceryListItem.list.title, style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(2.dp))
-                Text(dt, style = MaterialTheme.typography.bodySmall)
+                Text(groceryListItem.createdAtText, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(4.dp))
-                Text(detail, style = MaterialTheme.typography.bodyMedium)
+                Text(groceryListItem.detailText, style = MaterialTheme.typography.bodyMedium)
             }
             IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
             IconButton(onClick = onDelete) {

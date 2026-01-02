@@ -1,4 +1,7 @@
-package com.flash.groceryVault.util
+package com.flash.groceryVault.ui.util
+
+import kotlin.collections.iterator
+import kotlin.text.iterator
 
 object SimpleJson {
     fun encode(value: Any?): String = buildString { appendValue(value) }
