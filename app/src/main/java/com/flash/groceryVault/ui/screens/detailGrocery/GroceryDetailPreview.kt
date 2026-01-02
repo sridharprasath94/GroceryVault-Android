@@ -1,9 +1,9 @@
 package com.flash.groceryVault.ui.screens.detailGrocery
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.data.GroceryItemEntity
-import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
 private fun fakeGroceryDetailUiState(
@@ -35,6 +35,20 @@ private fun fakeGroceryDetailUiState(
     )
 }
 
+@Composable
+private fun GroceryDetailFormPreviewWrapper(
+    ui: GroceryDetailUiState
+) {
+    GroceryVaultTheme {
+        GroceryDetailForm(
+            ui = ui,
+            onBack = {},
+            onEdit = {},
+            onToggleItemChecked = { _: Long, _: Boolean -> }
+        )
+    }
+}
+
 @Preview(
     name = "Grocery Detail Loaded",
     showBackground = true
@@ -42,18 +56,13 @@ private fun fakeGroceryDetailUiState(
 @Preview(
     name = "Grocery Detail Loaded – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun GroceryDetailPreview_Loaded() {
-    GroceryVaultTheme {
-        GroceryDetailForm(
-            ui = fakeGroceryDetailUiState(),
-            onBack = {},
-            onEdit = {},
-            onToggleItemChecked = { _: Long, _: Boolean -> }
-        )
-    }
+fun GroceryDetailLoadedFormPreview() {
+    GroceryDetailFormPreviewWrapper(
+        ui = fakeGroceryDetailUiState(),
+    )
 }
 
 @Preview(
@@ -63,16 +72,11 @@ fun GroceryDetailPreview_Loaded() {
 @Preview(
     name = "Grocery Detail Loading – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun GroceryDetailPreview_Loading() {
-    GroceryVaultTheme {
-        GroceryDetailForm(
-            ui = fakeGroceryDetailUiState(isLoading = true),
-            onBack = {},
-            onEdit = {},
-            onToggleItemChecked = { _: Long, _: Boolean -> }
-        )
-    }
+fun GroceryDetailFormPreview_Loading() {
+    GroceryDetailFormPreviewWrapper(
+        ui = fakeGroceryDetailUiState(isLoading = true),
+    )
 }

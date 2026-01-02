@@ -20,6 +20,22 @@ private fun previewAuthFormUiState(authState: AuthState = AuthState.LoggedOut): 
     )
 }
 
+@Composable
+private fun AuthFormContentPreviewWrapper(
+    ui: AuthFormUiState
+) {
+    GroceryVaultTheme {
+        AuthFormContent(
+            ui = ui,
+            onEmailChange = {},
+            onPasswordChange = {},
+            onSignIn = {},
+            onSignUp = {},
+            onGoogleSignIn = {},
+        )
+    }
+}
+
 @Preview(
     name = "Auth Form - Logged Out",
     showBackground = true, widthDp = 360, heightDp = 720
@@ -31,16 +47,9 @@ private fun previewAuthFormUiState(authState: AuthState = AuthState.LoggedOut): 
 )
 @Composable
 fun AuthFormContentPreviewLoggedOut() {
-    GroceryVaultTheme {
-        AuthFormContent(
-            ui = previewAuthFormUiState(),
-            onEmailChange = {},
-            onPasswordChange = {},
-            onSignIn = {},
-            onSignUp = {},
-            onGoogleSignIn = {},
-        )
-    }
+    AuthFormContentPreviewWrapper(
+        ui = previewAuthFormUiState(),
+    )
 }
 
 @Preview(name = "Auth Form - Loading", showBackground = true, widthDp = 360, heightDp = 720)
@@ -52,13 +61,8 @@ fun AuthFormContentPreviewLoggedOut() {
 @Composable
 fun AuthFormContentPreviewLoading() {
     GroceryVaultTheme {
-        AuthFormContent(
+        AuthFormContentPreviewWrapper(
             ui = previewAuthFormUiState(authState = AuthState.Loading),
-            onEmailChange = {},
-            onPasswordChange = {},
-            onSignIn = {},
-            onSignUp = {},
-            onGoogleSignIn = {},
         )
     }
 }
@@ -71,21 +75,14 @@ fun AuthFormContentPreviewLoading() {
 )
 @Composable
 fun AuthFormContentPreviewLoggedIn() {
-    GroceryVaultTheme {
-        AuthFormContent(
-            ui = previewAuthFormUiState(
-                authState = AuthState.LoggedIn(
-                    "userId123",
-                    "abc-user@gmail.com"
-                )
-            ),
-            onEmailChange = {},
-            onPasswordChange = {},
-            onSignIn = {},
-            onSignUp = {},
-            onGoogleSignIn = {},
-        )
-    }
+    AuthFormContentPreviewWrapper(
+        ui = previewAuthFormUiState(
+            authState = AuthState.LoggedIn(
+                "userId123",
+                "abc-user@gmail.com"
+            )
+        ),
+    )
 }
 
 @Preview(name = "Email Field", showBackground = true)

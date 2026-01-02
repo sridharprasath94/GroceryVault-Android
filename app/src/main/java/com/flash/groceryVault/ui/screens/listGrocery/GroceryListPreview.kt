@@ -1,5 +1,6 @@
 package com.flash.groceryVault.ui.screens.listGrocery
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.data.GroceryListEntity
@@ -28,44 +29,29 @@ fun fakeGroceryListItems(): List<GroceryListItem> = listOf(
     )
 )
 
-fun fakeGroceryListUiState(): GroceryListUiState =
+fun fakeGroceryListUiState(
+    isLoadingData: Boolean = false,
+    groceryListWithItems: List<GroceryListItem> = fakeGroceryListItems(),
+    showMenu: Boolean = false,
+    isNavigating: Boolean = false
+): GroceryListUiState =
     GroceryListUiState(
         currentUserUid = "preview-user",
-        groceryListItems = fakeGroceryListItems(),
-        showMenu = false,
+        groceryListItems = groceryListWithItems,
+        showMenu = showMenu,
         showLogoutDialog = false,
         deleteListId = null,
         isSyncing = false,
         isCloudSynced = true,
         lastSyncedAt = System.currentTimeMillis() - 60_000,
         didAutoSync = true,
-        isLoadingData = false,
-        isNavigating = false
+        isLoadingData = isLoadingData,
+        isNavigating = isNavigating
     )
 
-fun fakeLoadedState() =
-    fakeGroceryListUiState()
-
-fun fakeLoadingState() =
-    fakeGroceryListUiState().copy(
-        isLoadingData = true,
-        groceryListItems = emptyList()
-    )
-
-fun fakeEmptyState() =
-    fakeGroceryListUiState().copy(
-        groceryListItems = emptyList(),
-        isLoadingData = false
-    )
-
-fun fakeMenuOpenState() =
-    fakeGroceryListUiState().copy(
-        showMenu = true,
-        isNavigating = false
-    )
 
 @Composable
-private fun GroceryListPreviewWrapper(
+private fun GroceryListContentPreviewWrapper(
     ui: GroceryListUiState
 ) {
     GroceryVaultTheme {
@@ -90,11 +76,15 @@ private fun GroceryListPreviewWrapper(
 @Preview(
     name = "Loaded – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun GroceryListPreview_Loaded() {
-    GroceryListPreviewWrapper(fakeLoadedState())
+fun GroceryListContentPreview_Loaded() {
+    GroceryListContentPreviewWrapper(
+        fakeGroceryListUiState(
+            isLoadingData = true,
+        )
+    )
 }
 
 @Preview(
@@ -104,11 +94,15 @@ fun GroceryListPreview_Loaded() {
 @Preview(
     name = "Loading – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun GroceryListPreview_Loading() {
-    GroceryListPreviewWrapper(fakeLoadingState())
+fun GroceryListContentPreview_Loading() {
+    GroceryListContentPreviewWrapper(
+        fakeGroceryListUiState(
+            isLoadingData = true,
+        )
+    )
 }
 
 @Preview(
@@ -118,24 +112,32 @@ fun GroceryListPreview_Loading() {
 @Preview(
     name = "Empty – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun GroceryListPreview_Empty() {
-    GroceryListPreviewWrapper(fakeEmptyState())
+fun GroceryListContentPreview_Empty() {
+    GroceryListContentPreviewWrapper(
+        fakeGroceryListUiState(
+            groceryListWithItems = emptyList()
+        )
+    )
 }
 
 @Preview(
     name = "Menu Open",
     showBackground = true
 )
-
 @Preview(
     name = "Menu Open – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun GroceryListPreview_MenuOpen() {
-    GroceryListPreviewWrapper(fakeMenuOpenState())
+fun GroceryListContentPreview_MenuOpen() {
+    GroceryListContentPreviewWrapper(
+        fakeGroceryListUiState(
+            showMenu = true,
+            isNavigating = false
+        )
+    )
 }
