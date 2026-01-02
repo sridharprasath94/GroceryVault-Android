@@ -94,7 +94,7 @@ class CreateGroceryViewModel(
         val state = _ui.value
         val cleanTitle = state.title.trim()
         val cleanDesc = state.description.trim().ifEmpty { null }
-        val items = state.groceryItems.map { it.name }
+        val items = state.groceryItems.map { it.name to it.isChecked }
 
         viewModelScope.launch {
             try {

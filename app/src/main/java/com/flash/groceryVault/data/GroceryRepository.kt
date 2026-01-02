@@ -15,7 +15,7 @@ class GroceryRepository(
     suspend fun createList(
         title: String,
         description: String?,
-        items: List<String>,
+        items: List<Pair<String, Boolean>>,
     ): Long {
         val now = System.currentTimeMillis()
         val listId = dao.insertList(
@@ -28,15 +28,15 @@ class GroceryRepository(
         )
 
         val cleanItems = items
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
+            .map { it.first.trim() to it.second }
+            .filter { it.first.isNotBlank() }
 
         dao.insertItems(
-            cleanItems.mapIndexed { idx, name ->
+            cleanItems.mapIndexed { idx, item ->
                 GroceryItemEntity(
                     listId = listId,
-                    name = name,
-                    isChecked = false,
+                    name = item.first,
+                    isChecked = item.second,
                     sortOrder = idx,
                     createdAt = now,
                     updatedAt = now,
@@ -53,7 +53,12 @@ class GroceryRepository(
         items: List<Pair<String, Boolean>>,
     ) {
         val now = System.currentTimeMillis()
-        dao.updateList(id, title = title, description = description?.trim()?.ifEmpty { null }, updatedAt = now)
+        dao.updateList(
+            id,
+            title = title,
+            description = description?.trim()?.ifEmpty { null },
+            updatedAt = now
+        )
 
         // Replace items for simplicity (stable & predictable for production with small lists)
         dao.deleteItemsForList(id)

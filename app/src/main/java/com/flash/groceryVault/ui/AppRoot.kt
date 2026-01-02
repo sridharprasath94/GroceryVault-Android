@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -71,7 +72,7 @@ fun AppRoot(container: AppContainer) {
         }
 
         composable(Routes.LIST) {
-//            LocalContext.current.deleteDatabase( "grocery_db_${(authState as? AuthState.LoggedIn)?.uid}")
+//           LocalContext.current.deleteDatabase( "grocery_db_${(authState as? AuthState.LoggedIn)?.uid}")
             val vm = remember { GroceryListViewModel(container) }
             GroceryListScreen(
                 vm = vm,
