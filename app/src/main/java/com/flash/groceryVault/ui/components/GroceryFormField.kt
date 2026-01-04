@@ -55,7 +55,7 @@ fun GroceryFormField(
                 onValueChange = { onChange(groceryItems.copy(name = it)) },
                 suggestions = suggestions,
                 label = "Grocery item",
-                matchMode = MatchMode.Contains,
+                matchMode = MatchMode.Prefix,
                 showDropdownIcon = true,
                 modifier = Modifier.fillMaxWidth()
             )
