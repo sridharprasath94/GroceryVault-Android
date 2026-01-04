@@ -341,7 +341,7 @@ fun GroceryListCard(
             Column(Modifier.weight(1f)) {
                 Text(groceryListItem.list.title, style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(2.dp))
-                Text(groceryListItem.createdAtText, style = MaterialTheme.typography.bodySmall)
+                Text(groceryListItem.updatedAtText, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(4.dp))
                 Text(groceryListItem.detailText, style = MaterialTheme.typography.bodyMedium)
             }

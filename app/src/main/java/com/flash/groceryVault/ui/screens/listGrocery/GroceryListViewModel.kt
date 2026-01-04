@@ -1,6 +1,7 @@
 package com.flash.groceryVault.ui.screens.listGrocery
 
 import android.text.format.DateFormat
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flash.groceryVault.di.AppContainer
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -70,25 +72,33 @@ class GroceryListViewModel(
 
     init {
         viewModelScope.launch {
-            groceryRepository.observeLists()
+            groceryRepository.observeListsWithItems()
                 .onStart { _ui.update { it.copy(isLoadingData = true) } }
-                .collect { groceryListEntities ->
-                    val groceryListItems = groceryListEntities.map { list ->
-                        val details = groceryRepository.getListWithItemsOnce(list.id)
-                        val items = details?.items.orEmpty()
+                .distinctUntilChanged()
+                .collect { entries ->
+                    Log.d(
+                        "GroceryListViewModel",
+                        "Observed ${entries.size} grocery lists"
+                    )
+
+                    val rows = entries.map { entry ->
+                        val checkedCount = entry.items.count { it.isChecked }
+
                         GroceryListItem(
-                            title = list.title,
-                            list = list,
-                            createdAtText = DateFormat.format(
+                            title = entry.list.title,
+                            list = entry.list,
+                            updatedAtText = DateFormat.format(
                                 DateFormats.LIST_DATE_TIME_WITH_YEAR,
-                                list.createdAt
+                                entry.list.updatedAt
                             ).toString(),
-                            detailText = "${items.size} items • ${items.count { it.isChecked }} checked"
+                            detailText =
+                                "${entry.items.size} items • $checkedCount checked"
                         )
                     }
+
                     _ui.update {
                         it.copy(
-                            groceryListItems = groceryListItems,
+                            groceryListItems = rows,
                             isLoadingData = false
                         )
                     }

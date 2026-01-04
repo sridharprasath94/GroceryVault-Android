@@ -27,7 +27,7 @@ sealed interface GroceryDetailEvent {
 data class GroceryDetailUiState(
     val title: String = "",
     val description: String? = "",
-    val createdAt: String = "",
+    val updatedAt: String = "",
     val groceryItems: List<GroceryItemEntity> = emptyList(),
     val isLoadingData: Boolean = false,
     val isNavigating: Boolean = false,
@@ -58,9 +58,9 @@ class GroceryDetailViewModel(
                             it.copy(
                                 title = groceryListWithItems.list.title,
                                 description = groceryListWithItems.list.description,
-                                createdAt = DateFormat.format(
+                                updatedAt = DateFormat.format(
                                     DateFormats.LIST_DATE_TIME_WITH_YEAR,
-                                    groceryListWithItems.list.createdAt
+                                    groceryListWithItems.list.updatedAt
                                 ).toString(),
                                 groceryItems = groceryListWithItems.items,
                                 isLoadingData = false

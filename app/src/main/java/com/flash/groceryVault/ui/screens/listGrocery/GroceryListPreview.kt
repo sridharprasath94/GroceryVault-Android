@@ -12,7 +12,7 @@ import com.flash.groceryVault.ui.util.DateFormats
 private fun fakeGroceryListItems(): List<GroceryListItem> = listOf(
     GroceryListItem(
         title = "Weekly Groceries",
-        createdAtText = DateFormat.format(
+        updatedAtText = DateFormat.format(
             DateFormats.LIST_DATE_TIME_WITH_YEAR,
             System.currentTimeMillis() - 86_400_000
         ).toString(),
@@ -26,7 +26,7 @@ private fun fakeGroceryListItems(): List<GroceryListItem> = listOf(
     ),
     GroceryListItem(
         title = "Party Shopping",
-        createdAtText = DateFormat.format(
+        updatedAtText = DateFormat.format(
             DateFormats.LIST_DATE_TIME_WITH_YEAR,
             System.currentTimeMillis() - 2 * 86_400_000
         ).toString(),

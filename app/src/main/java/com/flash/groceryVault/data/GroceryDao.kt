@@ -10,6 +10,16 @@ interface GroceryDao {
     fun observeLists(): Flow<List<GroceryListEntity>>
 
     @Transaction
+    @Query(
+        """
+    SELECT * FROM grocery_lists 
+    WHERE isDeleted = 0 
+    ORDER BY createdAt DESC
+"""
+    )
+    fun observeListsWithItems(): Flow<List<GroceryListWithItems>>
+
+    @Transaction
     @Query("SELECT * FROM grocery_lists WHERE id = :id LIMIT 1")
     fun observeListWithItems(id: Long): Flow<GroceryListWithItems?>
 
@@ -44,9 +54,17 @@ interface GroceryDao {
     @Query("UPDATE grocery_items SET isChecked = :checked, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setItemChecked(id: Long, checked: Boolean, updatedAt: Long)
 
+    @Query("SELECT listId FROM grocery_items WHERE id = :itemId LIMIT 1")
+    suspend fun getListIdForItem(itemId: Long): Long?
+
+    @Query("UPDATE grocery_lists SET updatedAt = :updatedAt WHERE id = :listId")
+    suspend fun updateListUpdatedAt(listId: Long, updatedAt: Long)
+
     // Clear
-    @Query("DELETE FROM grocery_items") suspend fun clearItems()
-    @Query("DELETE FROM grocery_lists") suspend fun clearLists()
+    @Query("DELETE FROM grocery_items")
+    suspend fun clearItems()
+    @Query("DELETE FROM grocery_lists")
+    suspend fun clearLists()
 
     @Transaction
     suspend fun clearAll() {

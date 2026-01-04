@@ -12,7 +12,7 @@ private fun fakeGroceryDetailUiState(
     return GroceryDetailUiState(
         title = "Weekly Groceries",
         description = "Items to buy for the coming week",
-        createdAt = "12 Mar 2026, 18:45",
+        updatedAt = "12 Mar 2026, 18:45",
         groceryItems = listOf(
             GroceryItemEntity(
                 name = "Milk",

@@ -1,14 +1,20 @@
 package com.flash.groceryVault.data
 
+import android.util.Log
 import com.flash.groceryVault.ui.util.SimpleJson
+import com.flash.groceryVault.ui.util.toFormattedDateTimeLegacy
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray
+import java.lang.String.format
 
 class GroceryRepository(
     private val dao: GroceryDao,
 ) {
 
     fun observeLists(): Flow<List<GroceryListEntity>> = dao.observeLists()
+
+    fun observeListsWithItems(): Flow<List<GroceryListWithItems>> =
+        dao.observeListsWithItems()
 
     fun observeListWithItems(id: Long): Flow<GroceryListWithItems?> = dao.observeListWithItems(id)
 
@@ -82,7 +88,30 @@ class GroceryRepository(
     }
 
     suspend fun setItemChecked(itemId: Long, checked: Boolean) {
-        dao.setItemChecked(itemId, checked, updatedAt = System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+
+        // 1️⃣ Update item
+        dao.setItemChecked(
+            id = itemId,
+            checked = checked,
+            updatedAt = now
+        )
+
+        // 2️⃣ Find parent list
+        val listId = dao.getListIdForItem(itemId) ?: return
+
+        Log.d(
+            "GroceryRepository", "setItemChecked: item $itemId in list $listId set to" +
+                    " $checked. Updated at in 24hour format is ${
+                        now.toFormattedDateTimeLegacy()
+                    }"
+        )
+
+        // 3️⃣ Touch parent list updatedAt
+        dao.updateListUpdatedAt(
+            listId = listId,
+            updatedAt = now
+        )
     }
 
     suspend fun deleteList(listId: Long) {
@@ -103,23 +132,43 @@ class GroceryRepository(
         return GroceryListWithItems(list = list, items = items)
     }
 
-    suspend fun applyRemoteList(remote: GroceryListEntity, remoteItems: List<GroceryItemEntity>) {
-        // Upsert list
-        dao.upsertLists(listOf(remote))
-
-        // Items: replace list items
-        dao.deleteItemsForList(remote.id)
-        if (!remote.isDeleted) {
-            dao.insertItems(
-                remoteItems.mapIndexed { idx, it ->
-                    it.copy(
-                        id = 0, // local row id; we don't preserve per-item ids in this simple sync model
-                        listId = remote.id,
-                        sortOrder = idx
-                    )
-                }
+    suspend fun applyRemoteList(
+        remote: GroceryListEntity,
+        remoteItems: List<GroceryItemEntity>
+    ) {
+        val local = dao.getListOnce(remote.id)
+        Log.d(
+            "GroceryRepository", format(
+                "applyRemoteList: remote list %d (updatedAt=%s), local=%s",
+                remote.id,
+                remote.updatedAt.toFormattedDateTimeLegacy(),
+                local?.updatedAt?.toFormattedDateTimeLegacy() ?: "null"
             )
+        )
+        if (local != null && remote.updatedAt < local.updatedAt) {
+            // Local is newer; do not apply remote.
+            return
         }
+        if (remote.isDeleted) {
+            dao.markListDeleted(
+                remote.id,
+                deletedAt = remote.deletedAt ?: System.currentTimeMillis(),
+                updatedAt = remote.updatedAt
+            )
+            dao.deleteItemsForList(remote.id)
+            return
+        }
+        dao.upsertLists(listOf(remote))
+        dao.deleteItemsForList(remote.id)
+        dao.insertItems(
+            remoteItems.mapIndexed { idx, it ->
+                it.copy(
+                    id = 0,
+                    listId = remote.id,
+                    sortOrder = idx
+                )
+            }
+        )
     }
 
     // ---- Backup JSON ----
