@@ -93,12 +93,12 @@ internal fun GroceryDetailTopBar(
 ) {
     Box {
         TopAppBar(
-            title = { Text("Grocery List") },
+            title = { Text("Grocery List", color = MaterialTheme.colorScheme.onPrimary) },
             navigationIcon = {
                 IconButton(onClick = onBack, enabled = isInteractionEnabled) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Close"
+                        contentDescription = "Close",
                     )
                 }
             },
@@ -106,7 +106,7 @@ internal fun GroceryDetailTopBar(
                 IconButton(onClick = onEdit) {
                     Icon(
                         Icons.Default.Edit,
-                        contentDescription = "Edit"
+                        contentDescription = "Edit",
                     )
                 }
             }
