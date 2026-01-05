@@ -1,9 +1,17 @@
 package com.flash.groceryVault.data
 
-import com.flash.groceryVault.util.SimpleJson
+import android.util.Log
+import com.flash.groceryVault.ui.util.SimpleJson
+import com.flash.groceryVault.ui.util.toFormattedDateTimeLegacy
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONArray
-import org.json.JSONObject
+import java.lang.String.format
+
+sealed class SyncOrigin {
+    object Local : SyncOrigin()
+    object Remote : SyncOrigin()
+}
 
 class GroceryRepository(
     private val dao: GroceryDao,
@@ -11,17 +19,26 @@ class GroceryRepository(
 
     fun observeLists(): Flow<List<GroceryListEntity>> = dao.observeLists()
 
+    fun observeListsWithItems(): Flow<List<GroceryListWithItems>> =
+        dao.observeListsWithItems()
+
     fun observeListWithItems(id: Long): Flow<GroceryListWithItems?> = dao.observeListWithItems(id)
+
+    private val _syncOrigin = MutableSharedFlow<SyncOrigin>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+    val syncOrigin: Flow<SyncOrigin> = _syncOrigin
 
     suspend fun createList(
         title: String,
         description: String?,
-        items: List<String>,
+        items: List<Pair<String, Boolean>>,
     ): Long {
         val now = System.currentTimeMillis()
         val listId = dao.insertList(
             GroceryListEntity(
-                title = title,
+                title = title.trim(),
                 description = description?.trim()?.ifEmpty { null },
                 createdAt = now,
                 updatedAt = now,
@@ -29,21 +46,22 @@ class GroceryRepository(
         )
 
         val cleanItems = items
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
+            .map { it.first.trim() to it.second }
+            .filter { it.first.isNotBlank() }
 
         dao.insertItems(
-            cleanItems.mapIndexed { idx, name ->
+            cleanItems.mapIndexed { idx, item ->
                 GroceryItemEntity(
                     listId = listId,
-                    name = name,
-                    isChecked = false,
+                    name = item.first,
+                    isChecked = item.second,
                     sortOrder = idx,
                     createdAt = now,
                     updatedAt = now,
                 )
             }
         )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
         return listId
     }
 
@@ -54,7 +72,12 @@ class GroceryRepository(
         items: List<Pair<String, Boolean>>,
     ) {
         val now = System.currentTimeMillis()
-        dao.updateList(id, title = title, description = description?.trim()?.ifEmpty { null }, updatedAt = now)
+        dao.updateList(
+            id,
+            title = title.trim(),
+            description = description?.trim()?.ifEmpty { null },
+            updatedAt = now
+        )
 
         // Replace items for simplicity (stable & predictable for production with small lists)
         dao.deleteItemsForList(id)
@@ -75,10 +98,35 @@ class GroceryRepository(
                 )
             }
         )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
     suspend fun setItemChecked(itemId: Long, checked: Boolean) {
-        dao.setItemChecked(itemId, checked, updatedAt = System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+
+        // 1️⃣ Update item
+        dao.setItemChecked(
+            id = itemId,
+            checked = checked,
+            updatedAt = now
+        )
+
+        // 2️⃣ Find parent list
+        val listId = dao.getListIdForItem(itemId) ?: return
+
+        Log.d(
+            "GroceryRepository", "setItemChecked: item $itemId in list $listId set to" +
+                    " $checked. Updated at in 24hour format is ${
+                        now.toFormattedDateTimeLegacy()
+                    }"
+        )
+
+        // 3️⃣ Touch parent list updatedAt
+        dao.updateListUpdatedAt(
+            listId = listId,
+            updatedAt = now
+        )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
     suspend fun deleteList(listId: Long) {
@@ -99,23 +147,45 @@ class GroceryRepository(
         return GroceryListWithItems(list = list, items = items)
     }
 
-    suspend fun applyRemoteList(remote: GroceryListEntity, remoteItems: List<GroceryItemEntity>) {
-        // Upsert list
-        dao.upsertLists(listOf(remote))
+    suspend fun applyRemoteList(
+        remote: GroceryListEntity,
+        remoteItems: List<GroceryItemEntity>
+    ) {
 
-        // Items: replace list items
-        dao.deleteItemsForList(remote.id)
-        if (!remote.isDeleted) {
-            dao.insertItems(
-                remoteItems.mapIndexed { idx, it ->
-                    it.copy(
-                        id = 0, // local row id; we don't preserve per-item ids in this simple sync model
-                        listId = remote.id,
-                        sortOrder = idx
-                    )
-                }
+        val local = dao.getListOnce(remote.id)
+        Log.d(
+            "GroceryRepository", format(
+                "applyRemoteList: remote list %d (updatedAt=%s), local=%s",
+                remote.id,
+                remote.updatedAt.toFormattedDateTimeLegacy(),
+                local?.updatedAt?.toFormattedDateTimeLegacy() ?: "null"
             )
+        )
+        if (local != null && remote.updatedAt < local.updatedAt) {
+            // Local is newer; do not apply remote.
+            return
         }
+        if (remote.isDeleted) {
+            dao.markListDeleted(
+                remote.id,
+                deletedAt = remote.deletedAt ?: System.currentTimeMillis(),
+                updatedAt = remote.updatedAt
+            )
+            dao.deleteItemsForList(remote.id)
+            return
+        }
+        dao.upsertLists(listOf(remote))
+        dao.deleteItemsForList(remote.id)
+        dao.insertItems(
+            remoteItems.mapIndexed { idx, it ->
+                it.copy(
+                    id = 0,
+                    listId = remote.id,
+                    sortOrder = idx
+                )
+            }
+        )
+        _syncOrigin.tryEmit(SyncOrigin.Remote)
     }
 
     // ---- Backup JSON ----

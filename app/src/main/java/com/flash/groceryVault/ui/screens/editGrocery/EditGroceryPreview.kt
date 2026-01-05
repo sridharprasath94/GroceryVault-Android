@@ -1,99 +1,38 @@
 package com.flash.groceryVault.ui.screens.editGrocery
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
-private fun previewEditGroceryUiContentState(): EditGroceryUiState =
+private fun previewEditGroceryUiContentState(
+    groceryItems: List<GroceryItemFormRow> = listOf(
+        GroceryItemFormRow(name = "Milk"),
+        GroceryItemFormRow(name = "Eggs"),
+        GroceryItemFormRow(name = "Rice"),
+        GroceryItemFormRow(name = "Vegetables")
+    ),
+    isSaving: Boolean = false,
+    isLoadingData: Boolean = false
+): EditGroceryUiState =
     EditGroceryUiState(
         title = "Weekly Groceries",
         description = "Buy items for the coming week",
-        groceryItems = listOf(
-            GroceryItemFormRow(name = "Milk"),
-            GroceryItemFormRow(name = "Eggs"),
-            GroceryItemFormRow(name = "Rice"),
-            GroceryItemFormRow(name = "Vegetables")
-        ),
+        groceryItems = groceryItems,
         suggestions = listOf("Milk", "Eggs", "Rice", "Vegetables", "Bread"),
-        isSaving = false,
-        isLoadingData = false,
+        isSaving = isSaving,
+        isLoadingData = isLoadingData,
         isNavigating = false
     )
 
-
-private fun previewEditGroceryUiLoadingState(): EditGroceryUiState =
-    EditGroceryUiState(
-        title = "Weekly Groceries",
-        description = "Buy items for the coming week",
-        groceryItems = listOf(
-            GroceryItemFormRow(name = "Milk"),
-            GroceryItemFormRow(name = "Eggs"),
-            GroceryItemFormRow(name = "Rice"),
-            GroceryItemFormRow(name = "Vegetables")
-        ),
-        suggestions = listOf("Milk", "Eggs", "Rice", "Vegetables", "Bread"),
-        isSaving = false,
-        isLoadingData = true,
-        isNavigating = false
-    )
-
-private fun previewEditGroceryUiSavingState(): EditGroceryUiState =
-    EditGroceryUiState(
-        title = "Weekly Groceries",
-        description = "Buy items for the coming week",
-        groceryItems = listOf(
-            GroceryItemFormRow(name = "Milk"),
-            GroceryItemFormRow(name = "Eggs"),
-            GroceryItemFormRow(name = "Rice"),
-            GroceryItemFormRow(name = "Vegetables")
-        ),
-        suggestions = listOf("Milk", "Eggs", "Rice", "Vegetables", "Bread"),
-        isSaving = true,
-        isLoadingData = false,
-        isNavigating = false
-    )
-
-@Preview(
-    name = "Create Grocery Content – Light",
-    showBackground = true
-)
-@Preview(
-    name = "Create Grocery Content – Dark",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
 @Composable
-fun CreateGroceryFormContentPreview() {
+private fun EditGroceryFormPreviewWrapper(
+    ui: EditGroceryUiState
+) {
     GroceryVaultTheme {
         EditGroceryForm(
-            ui = previewEditGroceryUiContentState(),
-            onBack = {},
-            onSave = {},
-            onTitleChange = {},
-            onDescriptionChange = {},
-            onItemChange = { _, _ -> },
-            onItemRemove = {},
-            onAddItem = {}
-        )
-    }
-}
-
-
-@Preview(
-    name = "Create Grocery Saving – Light",
-    showBackground = true
-)
-@Preview(
-    name = "Create Grocery Saving – Dark",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun CreateGroceryFormSavingPreview() {
-    GroceryVaultTheme {
-        EditGroceryForm(
-            ui = previewEditGroceryUiSavingState(),
+            ui = ui,
             onBack = {},
             onSave = {},
             onTitleChange = {},
@@ -106,26 +45,66 @@ fun CreateGroceryFormSavingPreview() {
 }
 
 @Preview(
-    name = "Create Grocery Loading – Light",
+    name = "Edit Grocery Content",
     showBackground = true
 )
 @Preview(
-    name = "Create Grocery Loading – Dark",
+    name = "Edit Grocery Content – Dark",
     showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun CreateGroceryFormLoadingPreview() {
-    GroceryVaultTheme {
-        EditGroceryForm(
-            ui = previewEditGroceryUiLoadingState(),
-            onBack = {},
-            onSave = {},
-            onTitleChange = {},
-            onDescriptionChange = {},
-            onItemChange = { _, _ -> },
-            onItemRemove = {},
-            onAddItem = {}
-        )
-    }
+fun EditGroceryFormContentFormPreview() {
+    EditGroceryFormPreviewWrapper(
+        ui = previewEditGroceryUiContentState(),
+    )
+}
+
+
+@Preview(
+    name = "Edit Grocery Saving",
+    showBackground = true
+)
+@Preview(
+    name = "Edit Grocery Saving – Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun EditGroceryFormSavingFormPreview() {
+    EditGroceryFormPreviewWrapper(
+        ui = previewEditGroceryUiContentState(isSaving = true),
+    )
+}
+
+@Preview(
+    name = "Edit Grocery Loading",
+    showBackground = true
+)
+@Preview(
+    name = "Edit Grocery Loading – Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun EditGroceryFormLoadingFormPreview() {
+    EditGroceryFormPreviewWrapper(
+        ui = previewEditGroceryUiContentState(isLoadingData = true),
+    )
+}
+
+@Preview(
+    name = "Edit Grocery with No Items",
+    showBackground = true
+)
+@Preview(
+    name = "Edit Grocery with No Items – Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun EditGroceryFormNoItemsFormPreview() {
+    EditGroceryFormPreviewWrapper(
+        ui = previewEditGroceryUiContentState(groceryItems = emptyList()),
+    )
 }

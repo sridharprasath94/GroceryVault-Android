@@ -1,4 +1,4 @@
-package com.flash.groceryVault.util
+package com.flash.groceryVault.ui.util
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.height

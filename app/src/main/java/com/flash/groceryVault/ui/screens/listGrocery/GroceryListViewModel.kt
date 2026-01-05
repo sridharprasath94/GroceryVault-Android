@@ -1,18 +1,26 @@
 package com.flash.groceryVault.ui.screens.listGrocery
 
+import android.text.format.DateFormat
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flash.groceryVault.data.GroceryListEntity
+import com.flash.groceryVault.data.SyncOrigin
 import com.flash.groceryVault.di.AppContainer
+import com.flash.groceryVault.ui.data.GroceryListItem
+import com.flash.groceryVault.ui.util.DateFormats
+import com.flash.groceryVault.ui.util.toFormattedDateTimeLegacy
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class GroceryListItem(
-    val list: GroceryListEntity,
-    val itemCount: Int = 0,
-    val checkedCount: Int = 0,
-)
 
 data class GroceryListUiState(
     val currentUserUid: String = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous",
@@ -36,7 +44,7 @@ data class GroceryListUiState(
         }
     val syncSupportingText: String
         get() = if (lastSyncedAt > 0L) {
-            val dt = android.text.format.DateFormat.format("dd MMM, HH:mm", lastSyncedAt).toString()
+            val dt = DateFormat.format(DateFormats.LIST_DATE_TIME, lastSyncedAt).toString()
             "Last synced: $dt"
         } else {
             "Not synced yet"
@@ -56,7 +64,7 @@ class GroceryListViewModel(
     private val container: AppContainer,
 ) : ViewModel() {
 
-    private val repo = container.groceryRepositoryForCurrentUser
+    private val groceryRepository = container.groceryRepositoryForCurrentUser
 
     private val _ui = MutableStateFlow(GroceryListUiState())
     val ui: StateFlow<GroceryListUiState> = _ui.asStateFlow()
@@ -65,27 +73,65 @@ class GroceryListViewModel(
     val events: SharedFlow<GroceryListEvent> = _events.asSharedFlow()
 
     init {
+        // 1️⃣ Observe grocery lists
         viewModelScope.launch {
-            repo.observeLists()
+            groceryRepository.observeListsWithItems()
                 .onStart { _ui.update { it.copy(isLoadingData = true) } }
-                .collect { lists ->
-                    // Build rows with counts (small lists: compute on the fly)
-                    val groceryListItems = lists.map { list ->
-                        val details = repo.getListWithItemsOnce(list.id)
-                        val items = details?.items.orEmpty()
+                .distinctUntilChanged()
+                .collect { entries ->
+                    val rows = entries.map { entry ->
+                        val checkedCount = entry.items.count { it.isChecked }
                         GroceryListItem(
-                            list = list,
-                            itemCount = items.size,
-                            checkedCount = items.count { it.isChecked }
+                            title = entry.list.title,
+                            list = entry.list,
+                            updatedAtText = DateFormat.format(
+                                DateFormats.LIST_DATE_TIME_WITH_YEAR,
+                                entry.list.updatedAt
+                            ).toString(),
+                            detailText = "${entry.items.size} items • $checkedCount checked"
                         )
                     }
+
                     _ui.update {
                         it.copy(
-                            groceryListItems = groceryListItems,
+                            groceryListItems = rows,
                             isLoadingData = false
                         )
                     }
                 }
+        }
+
+        // 2️⃣ Observe sync origin
+        viewModelScope.launch {
+            groceryRepository.syncOrigin.collect { origin ->
+                when (origin) {
+                    SyncOrigin.Local -> {
+                        _ui.update {
+                            it.copy(isCloudSynced = false)
+                        }
+                    }
+
+                    SyncOrigin.Remote -> {
+                        // Remote updates advance lastSyncedAt and keep cloud synced
+                        val latestUpdatedAt =
+                            _ui.value.groceryListItems
+                                .maxOfOrNull { it.list.updatedAt }
+                                ?: return@collect
+
+                        Log.d(
+                            "GroceryRepository",
+                            "SyncOrigin.Remote observed, updating " +
+                                    "lastSyncedAt to ${latestUpdatedAt.toFormattedDateTimeLegacy()}"
+                        )
+                        _ui.update {
+                            it.copy(
+                                isCloudSynced = true,
+                                lastSyncedAt = latestUpdatedAt
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -152,7 +198,7 @@ class GroceryListViewModel(
         val listId = _ui.value.deleteListId ?: return
         viewModelScope.launch {
             runCatching {
-                repo.deleteList(listId)
+                groceryRepository.deleteList(listId)
             }.onSuccess {
                 _ui.update { it.copy(deleteListId = null) }
                 emitIfAllowed(GroceryListEvent.Toast("Recipe deleted"))

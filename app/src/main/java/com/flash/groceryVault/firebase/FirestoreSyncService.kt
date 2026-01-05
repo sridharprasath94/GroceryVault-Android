@@ -6,7 +6,9 @@ import com.flash.groceryVault.data.GroceryRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -130,7 +132,7 @@ class FirestoreSyncService(
                 }
 
                 // Run on background using a coroutine (fire-and-forget)
-                kotlinx.coroutines.GlobalScope.launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     runCatching { repo.applyRemoteList(remote, items) }
                 }
             }

@@ -1,3 +1,4 @@
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.WindowInsets
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,7 +84,7 @@ fun SuggestionAutoCompleteField(
                 }
             }
         )
-        ExposedDropdownMenu (
+        ExposedDropdownMenu(
             expanded = showMenu,
             onDismissRequest = { expanded = false },
             matchAnchorWidth = true,
@@ -159,34 +161,46 @@ fun rememberAnimatedImeBottomPadding(extra: Dp = 0.dp): Dp {
 }
 
 @Preview(name = "With dropdown icon", showBackground = true, widthDp = 360)
+@Preview(
+    name = "With dropdown icon - Dark", showBackground = true, widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun SuggestionAutoCompleteFieldPreview() {
     var ingredientValue by remember {
         mutableStateOf(TextFieldValue(""))
     }
-    SuggestionAutoCompleteField(
-        value = ingredientValue,
-        onValueChange = { ingredientValue = it },
-        suggestions = listOf("Onion", "Garlic", "Tomato", "Salt", "Pepper"),
-        label = "Ingredient",
-        showDropdownIcon = true,
-        matchMode = MatchMode.Contains
-    )
+    GroceryVaultTheme {
+        SuggestionAutoCompleteField(
+            value = ingredientValue,
+            onValueChange = { ingredientValue = it },
+            suggestions = listOf("Onion", "Garlic", "Tomato", "Salt", "Pepper"),
+            label = "Ingredient",
+            showDropdownIcon = true,
+            matchMode = MatchMode.Contains
+        )
+    }
 }
 
 
 @Preview(name = "Without dropdown icon", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Without dropdown icon - Dark", showBackground = true, widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun SuggestionAutoCompleteFieldWithoutDropdownPreview() {
     var ingredientValue by remember {
         mutableStateOf(TextFieldValue(""))
     }
-    SuggestionAutoCompleteField(
-        value = ingredientValue,
-        onValueChange = { ingredientValue = it },
-        suggestions = listOf("Onion", "Garlic", "Tomato", "Salt", "Pepper"),
-        label = "Ingredient",
-        showDropdownIcon = false,
-        matchMode = MatchMode.Contains
-    )
+    GroceryVaultTheme {
+        SuggestionAutoCompleteField(
+            value = ingredientValue,
+            onValueChange = { ingredientValue = it },
+            suggestions = listOf("Onion", "Garlic", "Tomato", "Salt", "Pepper"),
+            label = "Ingredient",
+            showDropdownIcon = false,
+            matchMode = MatchMode.Contains
+        )
+    }
 }

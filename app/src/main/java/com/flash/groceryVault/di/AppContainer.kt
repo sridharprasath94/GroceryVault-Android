@@ -116,9 +116,5 @@ class AppContainer(
             type = SuggestionType.GROCERY_ITEM,
             defaults = DefaultSuggestionsProvider.grocerySuggestions(appContext)
         )
-        suggestionsRepository.seedDefaultsIfEmpty(
-            type = SuggestionType.STEP,
-            defaults = DefaultSuggestionsProvider.steps(appContext)
-        )
     }
 }

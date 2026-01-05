@@ -167,7 +167,7 @@ fun GroceryDetailForm(
                     }
 
                     item {
-                        Text(ui.createdAt, style = MaterialTheme.typography.bodySmall)
+                        Text(ui.updatedAt, style = MaterialTheme.typography.bodySmall)
                     }
 
                     if (!ui.description.isNullOrBlank()) {

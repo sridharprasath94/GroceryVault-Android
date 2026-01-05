@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flash.groceryVault.data.GroceryItemEntity
 import com.flash.groceryVault.data.GroceryRepository
+import com.flash.groceryVault.ui.util.DateFormats
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,7 @@ sealed interface GroceryDetailEvent {
 data class GroceryDetailUiState(
     val title: String = "",
     val description: String? = "",
-    val createdAt: String = "",
+    val updatedAt: String = "",
     val groceryItems: List<GroceryItemEntity> = emptyList(),
     val isLoadingData: Boolean = false,
     val isNavigating: Boolean = false,
@@ -57,9 +58,9 @@ class GroceryDetailViewModel(
                             it.copy(
                                 title = groceryListWithItems.list.title,
                                 description = groceryListWithItems.list.description,
-                                createdAt = DateFormat.format(
-                                    "dd MMM yyyy, HH:mm",
-                                    groceryListWithItems.list.createdAt
+                                updatedAt = DateFormat.format(
+                                    DateFormats.LIST_DATE_TIME_WITH_YEAR,
+                                    groceryListWithItems.list.updatedAt
                                 ).toString(),
                                 groceryItems = groceryListWithItems.items,
                                 isLoadingData = false

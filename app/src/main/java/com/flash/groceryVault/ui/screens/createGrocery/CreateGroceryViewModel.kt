@@ -94,13 +94,13 @@ class CreateGroceryViewModel(
         val state = _ui.value
         val cleanTitle = state.title.trim()
         val cleanDesc = state.description.trim().ifEmpty { null }
-        val items = state.groceryItems.map { it.name }
+        val items = state.groceryItems.map { it.name to it.isChecked }
 
         viewModelScope.launch {
             try {
                 _ui.value = _ui.value.copy(isSaving = true)
                 val id = groceryRepository.createList(cleanTitle, cleanDesc, items)
-                suggestionsRepository.addMany(SuggestionType.GROCERY_ITEM, items)
+                suggestionsRepository.addMany(SuggestionType.GROCERY_ITEM, items .map { it.first })
                 onFinishedSaving(id)
             } catch (e: Exception) {
                 toast(e.message ?: "Failed to save")
