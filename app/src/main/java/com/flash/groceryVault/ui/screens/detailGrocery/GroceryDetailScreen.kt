@@ -98,7 +98,7 @@ internal fun GroceryDetailTopBar(
                 IconButton(onClick = onBack, enabled = isInteractionEnabled) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Close"
+                        contentDescription = "Close",
                     )
                 }
             },
@@ -106,7 +106,7 @@ internal fun GroceryDetailTopBar(
                 IconButton(onClick = onEdit) {
                     Icon(
                         Icons.Default.Edit,
-                        contentDescription = "Edit"
+                        contentDescription = "Edit",
                     )
                 }
             }

@@ -36,7 +36,7 @@ fun FormTopBar(
                 IconButton(onClick = onBack, enabled = isInteractionEnabled) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Close"
+                        contentDescription = "Close",
                     )
                 }
             },

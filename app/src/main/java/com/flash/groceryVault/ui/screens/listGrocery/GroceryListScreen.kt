@@ -2,8 +2,6 @@
 
 package com.flash.groceryVault.ui.screens.listGrocery
 
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -41,6 +39,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -201,13 +201,17 @@ fun GroceryListContent(
         topBar = {
             Box {
                 TopAppBar(
-                    title = { Text("Grocery List") },
+                    title = {
+                        Text(
+                            "Grocery List",
+                        )
+                    },
                     actions = {
                         if (isInteractionEnabled) {
                             IconButton(onClick = onMenuToggle) {
                                 Icon(
                                     Icons.Outlined.MoreVert,
-                                    contentDescription = "More options"
+                                    contentDescription = "More options",
                                 )
                             }
 
@@ -257,7 +261,7 @@ fun GroceryListContent(
                                 )
                             }
                         }
-                    }
+                    },
                 )
 
                 if (!isInteractionEnabled) {
@@ -350,11 +354,11 @@ fun GroceryListCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(groceryListItem.list.title, style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(2.dp))
-                Text(groceryListItem.updatedAtText, style = MaterialTheme.typography.bodySmall)
+                Text(groceryListItem.list.title, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(4.dp))
                 Text(groceryListItem.detailText, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(2.dp))
+                Text(groceryListItem.updatedAtText, style = MaterialTheme.typography.bodySmall)
             }
             IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
             IconButton(onClick = onDelete) {

@@ -74,7 +74,6 @@ fun SuggestionAutoCompleteField(
                 onValueChange(it)
                 expanded = true
             },
-            label = { Text(label) },
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(
@@ -121,7 +120,7 @@ fun SuggestionAutoCompleteField(
     suggestions: List<String>,
     label: String,
     modifier: Modifier = Modifier,
-    maxResults: Int = 8,
+    maxResults: Int = 20,
     showDropdownIcon: Boolean = true,
     matchMode: MatchMode = MatchMode.Contains,
 ) {
