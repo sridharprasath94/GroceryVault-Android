@@ -36,17 +36,12 @@ fun GroceryFormField(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.primary
-        ) {
-            Text(
-                text = index.toString(),
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
+
+        Checkbox(
+            modifier = Modifier.weight(0.1f),
+            checked = groceryItems.isChecked,
+            onCheckedChange = { onChange(groceryItems.copy(isChecked = it)) }
+        )
 
         SuggestionAutoCompleteField(
             value = groceryItems.name,
@@ -54,15 +49,10 @@ fun GroceryFormField(
             suggestions = suggestions,
             label = "Grocery item",
             matchMode = MatchMode.Contains,
-            showDropdownIcon = true,
+            showDropdownIcon = false,
             modifier = Modifier.weight(1.25f)
         )
 
-        Checkbox(
-            modifier = Modifier.weight(0.1f),
-            checked = groceryItems.isChecked,
-            onCheckedChange = { onChange(groceryItems.copy(isChecked = it)) }
-        )
 
         if (onRemove != null) {
             IconButton(
