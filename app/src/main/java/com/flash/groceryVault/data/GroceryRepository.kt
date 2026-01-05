@@ -132,6 +132,11 @@ class GroceryRepository(
     suspend fun deleteList(listId: Long) {
         val now = System.currentTimeMillis()
         dao.markListDeleted(listId, deletedAt = now, updatedAt = now)
+        dao.updateListUpdatedAt(
+            listId = listId,
+            updatedAt = now
+        )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
     suspend fun deleteAll() = dao.clearAll()

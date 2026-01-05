@@ -4,7 +4,6 @@ import MatchMode
 import SuggestionAutoCompleteField
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,39 +38,35 @@ fun GroceryFormField(
     ) {
         Surface(
             shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = MaterialTheme.colorScheme.primary
         ) {
             Text(
                 text = index.toString(),
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
 
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            SuggestionAutoCompleteField(
-                value = groceryItems.name,
-                onValueChange = { onChange(groceryItems.copy(name = it)) },
-                suggestions = suggestions,
-                label = "Grocery item",
-                matchMode = MatchMode.Contains,
-                showDropdownIcon = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+        SuggestionAutoCompleteField(
+            value = groceryItems.name,
+            onValueChange = { onChange(groceryItems.copy(name = it)) },
+            suggestions = suggestions,
+            label = "Grocery item",
+            matchMode = MatchMode.Contains,
+            showDropdownIcon = true,
+            modifier = Modifier.weight(1.25f)
+        )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = groceryItems.isChecked,
-                    onCheckedChange = { onChange(groceryItems.copy(isChecked = it)) }
-                )
-                Text("Checked")
-            }
-        }
+        Checkbox(
+            modifier = Modifier.weight(0.1f),
+            checked = groceryItems.isChecked,
+            onCheckedChange = { onChange(groceryItems.copy(isChecked = it)) }
+        )
 
         if (onRemove != null) {
             IconButton(
-                modifier = Modifier.weight(0.2f),
+                modifier = Modifier.weight(0.1f),
                 onClick = onRemove
             ) {
                 Icon(
