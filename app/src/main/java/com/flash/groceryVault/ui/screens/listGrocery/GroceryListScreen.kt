@@ -2,6 +2,8 @@
 
 package com.flash.groceryVault.ui.screens.listGrocery
 
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -275,7 +277,16 @@ fun GroceryListContent(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
+
+        val pullRefreshState = rememberPullToRefreshState()
+
+        PullToRefreshBox(
+            state = pullRefreshState,
+            isRefreshing = ui.isSyncing,
+            onRefresh = onSyncNow,
+            modifier = Modifier.fillMaxSize()
+        ) {
+
             if (ui.groceryListItems.isEmpty()) {
                 Box(
                     Modifier
@@ -283,7 +294,7 @@ fun GroceryListContent(
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No grocery lists yet. Tap + to create one.")
+                    Text("No grocery lists yet. Pull down to refresh or tap + to create one.")
                 }
             } else {
                 LazyColumn(
