@@ -93,7 +93,7 @@ internal fun GroceryDetailTopBar(
 ) {
     Box {
         TopAppBar(
-            title = { Text("Grocery List", color = MaterialTheme.colorScheme.onPrimary) },
+            title = { Text("Grocery List") },
             navigationIcon = {
                 IconButton(onClick = onBack, enabled = isInteractionEnabled) {
                     Icon(
