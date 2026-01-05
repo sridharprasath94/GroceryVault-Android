@@ -1,5 +1,6 @@
 package com.flash.groceryVault.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
@@ -70,6 +74,10 @@ fun GroceryForm(
                         onValueChange = onTitleChange,
                         label = { Text("Title") },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -77,6 +85,10 @@ fun GroceryForm(
                     OutlinedTextField(
                         value = description,
                         onValueChange = onDescriptionChange,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        ),
                         label = { Text("Notes (optional)") },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -130,7 +142,7 @@ fun GroceryForm(
     showBackground = true,
     widthDp = 360,
     heightDp = 720,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
 private fun GroceryFormLightPreview() {
