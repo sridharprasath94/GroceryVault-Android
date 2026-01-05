@@ -4,8 +4,14 @@ import android.util.Log
 import com.flash.groceryVault.ui.util.SimpleJson
 import com.flash.groceryVault.ui.util.toFormattedDateTimeLegacy
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONArray
 import java.lang.String.format
+
+sealed class SyncOrigin {
+    object Local : SyncOrigin()
+    object Remote : SyncOrigin()
+}
 
 class GroceryRepository(
     private val dao: GroceryDao,
@@ -18,6 +24,12 @@ class GroceryRepository(
 
     fun observeListWithItems(id: Long): Flow<GroceryListWithItems?> = dao.observeListWithItems(id)
 
+    private val _syncOrigin = MutableSharedFlow<SyncOrigin>(
+        replay = 0,
+        extraBufferCapacity = 1
+    )
+    val syncOrigin: Flow<SyncOrigin> = _syncOrigin
+
     suspend fun createList(
         title: String,
         description: String?,
@@ -26,7 +38,7 @@ class GroceryRepository(
         val now = System.currentTimeMillis()
         val listId = dao.insertList(
             GroceryListEntity(
-                title = title,
+                title = title.trim(),
                 description = description?.trim()?.ifEmpty { null },
                 createdAt = now,
                 updatedAt = now,
@@ -49,6 +61,7 @@ class GroceryRepository(
                 )
             }
         )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
         return listId
     }
 
@@ -61,7 +74,7 @@ class GroceryRepository(
         val now = System.currentTimeMillis()
         dao.updateList(
             id,
-            title = title,
+            title = title.trim(),
             description = description?.trim()?.ifEmpty { null },
             updatedAt = now
         )
@@ -85,6 +98,7 @@ class GroceryRepository(
                 )
             }
         )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
     suspend fun setItemChecked(itemId: Long, checked: Boolean) {
@@ -112,6 +126,7 @@ class GroceryRepository(
             listId = listId,
             updatedAt = now
         )
+        _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
     suspend fun deleteList(listId: Long) {
@@ -136,6 +151,7 @@ class GroceryRepository(
         remote: GroceryListEntity,
         remoteItems: List<GroceryItemEntity>
     ) {
+
         val local = dao.getListOnce(remote.id)
         Log.d(
             "GroceryRepository", format(
@@ -169,6 +185,7 @@ class GroceryRepository(
                 )
             }
         )
+        _syncOrigin.tryEmit(SyncOrigin.Remote)
     }
 
     // ---- Backup JSON ----
