@@ -74,7 +74,6 @@ fun SuggestionAutoCompleteField(
                 onValueChange(it)
                 expanded = true
             },
-            label = { Text(label) },
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(
