@@ -44,7 +44,8 @@ private fun GroceryDetailFormPreviewWrapper(
             ui = ui,
             onBack = {},
             onEdit = {},
-            onToggleItemChecked = { _: Long, _: Boolean -> }
+            onToggleItemChecked = { _: Long, _: Boolean -> },
+            onQuickAdd = {},
         )
     }
 }

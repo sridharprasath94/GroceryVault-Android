@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,8 +41,10 @@ fun SuggestionAutoCompleteField(
     label: String,
     modifier: Modifier = Modifier,
     maxResults: Int = 8,
-    showDropdownIcon: Boolean = true,   // ✅ optional, default ON
+    showDropdownIcon: Boolean = true,
     matchMode: MatchMode = MatchMode.Contains,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    placeholder: String = "",
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -84,6 +87,8 @@ fun SuggestionAutoCompleteField(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Done
             ),
+            keyboardActions = keyboardActions,
+            placeholder = if (placeholder.isNotBlank()) { { Text(placeholder) } } else null,
             trailingIcon = {
                 if (showDropdownIcon) {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -123,6 +128,8 @@ fun SuggestionAutoCompleteField(
     maxResults: Int = 20,
     showDropdownIcon: Boolean = true,
     matchMode: MatchMode = MatchMode.Contains,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    placeholder: String = "",
 ) {
     var tfv by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(value, selection = TextRange(value.length)))
@@ -146,7 +153,9 @@ fun SuggestionAutoCompleteField(
         modifier = modifier,
         maxResults = maxResults,
         showDropdownIcon = showDropdownIcon,
-        matchMode = matchMode
+        matchMode = matchMode,
+        keyboardActions = keyboardActions,
+        placeholder = placeholder,
     )
 }
 

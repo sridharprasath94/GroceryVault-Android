@@ -101,6 +101,26 @@ class GroceryRepository(
         _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
+    suspend fun addItem(listId: Long, name: String) {
+        val now = System.currentTimeMillis()
+        val currentItems = dao.getItemsOnce(listId)
+        val nextSortOrder = (currentItems.maxOfOrNull { it.sortOrder } ?: -1) + 1
+        dao.insertItems(
+            listOf(
+                GroceryItemEntity(
+                    listId = listId,
+                    name = name,
+                    isChecked = false,
+                    sortOrder = nextSortOrder,
+                    createdAt = now,
+                    updatedAt = now,
+                )
+            )
+        )
+        dao.updateListUpdatedAt(listId = listId, updatedAt = now)
+        _syncOrigin.tryEmit(SyncOrigin.Local)
+    }
+
     suspend fun setItemChecked(itemId: Long, checked: Boolean) {
         val now = System.currentTimeMillis()
 

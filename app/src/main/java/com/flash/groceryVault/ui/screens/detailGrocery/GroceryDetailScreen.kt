@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,11 +33,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
@@ -42,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import MatchMode
+import SuggestionAutoCompleteField
 import com.flash.groceryVault.ui.components.SectionCard
 import kotlinx.coroutines.flow.collectLatest
 
@@ -88,6 +96,7 @@ fun GroceryDetailScreen(
         onBack = vm::requestBack,
         onEdit = vm::requestEdit,
         onToggleItemChecked = vm::toggleChecked,
+        onQuickAdd = vm::quickAddItem,
     )
 }
 
@@ -149,15 +158,26 @@ fun GroceryDetailForm(
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onToggleItemChecked: (Long, Boolean) -> Unit,
+    onQuickAdd: (String) -> Unit,
 ) {
     val isInteractionEnabled = !ui.isNavigating && !ui.isLoadingData
     val checkedCount = ui.groceryItems.count { it.isChecked }
     val totalCount = ui.groceryItems.size
-    // UI-only sort: false (unchecked) sorts before true (checked); Kotlin sortedBy is stable
-    val displayItems = ui.groceryItems.sortedBy { it.isChecked }
+    // UI-only sort: unchecked first, newest unchecked at top; stable sort preserves group order
+    val displayItems = remember(ui.groceryItems) {
+        ui.groceryItems
+            .sortedByDescending { it.createdAt }
+            .sortedBy { it.isChecked }
+    }
 
     var hidePurchased by rememberSaveable { mutableStateOf(false) }
-    val visibleItems = if (hidePurchased) displayItems.filter { !it.isChecked } else displayItems
+    // Only recomputes when sort result or toggle changes, not on unrelated recompositions
+    val visibleItems = remember(displayItems, hidePurchased) {
+        if (hidePurchased) displayItems.filter { !it.isChecked } else displayItems
+    }
+
+    var quickAddText by rememberSaveable { mutableStateOf("") }
+    val quickAddFocusRequester = remember { FocusRequester() }
 
     Scaffold(
         topBar = {
@@ -219,7 +239,7 @@ fun GroceryDetailForm(
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(12.dp),
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         item {
@@ -242,6 +262,50 @@ fun GroceryDetailForm(
                                     modifier = Modifier.padding(12.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        SuggestionAutoCompleteField(
+                                            value = quickAddText,
+                                            onValueChange = { quickAddText = it },
+                                            suggestions = ui.suggestions,
+                                            label = "",
+                                            placeholder = "Quick add item...",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .focusRequester(quickAddFocusRequester),
+                                            showDropdownIcon = false,
+                                            matchMode = MatchMode.Contains,
+                                            keyboardActions = KeyboardActions(
+                                                onDone = {
+                                                    onQuickAdd(quickAddText)
+                                                    quickAddText = ""
+                                                    quickAddFocusRequester.requestFocus()
+                                                }
+                                            ),
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                onQuickAdd(quickAddText)
+                                                quickAddText = ""
+                                                quickAddFocusRequester.requestFocus()
+                                            },
+                                            enabled = quickAddText.isNotBlank(),
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Add item",
+                                                tint = if (quickAddText.isNotBlank()) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                                },
+                                            )
+                                        }
+                                    }
+
+                                    if (visibleItems.isNotEmpty()) {
+                                        HorizontalDivider()
+                                    }
+
                                     visibleItems.forEach { item ->
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -274,4 +338,3 @@ fun GroceryDetailForm(
         }
     }
 }
-

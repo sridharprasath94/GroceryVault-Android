@@ -111,6 +111,7 @@ fun AppRoot(container: AppContainer) {
             val vm = remember {
                 GroceryDetailViewModel(
                     container.groceryRepositoryForCurrentUser,
+                    container.suggestionsRepository,
                     id,
                 )
             }
