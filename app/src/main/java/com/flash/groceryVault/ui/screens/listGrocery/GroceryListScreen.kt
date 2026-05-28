@@ -27,11 +27,14 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
@@ -275,8 +279,16 @@ fun GroceryListContent(
         },
         floatingActionButton = {
             if (isInteractionEnabled) {
-                FloatingActionButton(onClick = onCreate) {
-                    Icon(Icons.Default.Add, contentDescription = "New list")
+                if (ui.groceryListItems.isEmpty()) {
+                    ExtendedFloatingActionButton(
+                        onClick = onCreate,
+                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        text = { Text("New List") },
+                    )
+                } else {
+                    FloatingActionButton(onClick = onCreate) {
+                        Icon(Icons.Default.Add, contentDescription = "New list")
+                    }
                 }
             }
         }
@@ -292,13 +304,34 @@ fun GroceryListContent(
         ) {
 
             if (ui.groceryListItems.isEmpty()) {
-                Box(
-                    Modifier
+                Column(
+                    modifier = Modifier
                         .padding(padding)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("No grocery lists yet. Pull down to refresh or tap + to create one.")
+                    Icon(
+                        imageVector = Icons.Outlined.ShoppingCart,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "No lists yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Pull down to sync or tap + to create your first grocery list.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
                 }
             } else {
                 LazyColumn(
@@ -343,28 +376,43 @@ fun GroceryListCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable { onOpen() }
+            .clickable { onOpen() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
-                .clickable(onClick = onOpen),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(groceryListItem.list.title, style = MaterialTheme.typography.titleLarge)
+                Text(groceryListItem.list.title, style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
-                Text(groceryListItem.detailText, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    groceryListItem.detailText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Spacer(Modifier.height(2.dp))
-                Text(groceryListItem.updatedAtText, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    groceryListItem.updatedAtText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
+            IconButton(onClick = onEdit) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete"
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error,
                 )
             }
         }

@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Switch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,10 +29,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -88,12 +95,25 @@ fun GroceryDetailScreen(
 @Composable
 internal fun GroceryDetailTopBar(
     isInteractionEnabled: Boolean,
+    checkedCount: Int,
+    totalCount: Int,
     onBack: () -> Unit,
     onEdit: () -> Unit,
 ) {
     Box {
         TopAppBar(
-            title = { Text("Grocery List") },
+            title = {
+                Column {
+                    Text("Grocery List")
+                    if (totalCount > 0) {
+                        Text(
+                            "$checkedCount / $totalCount done",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            },
             navigationIcon = {
                 IconButton(onClick = onBack, enabled = isInteractionEnabled) {
                     Icon(
@@ -107,6 +127,7 @@ internal fun GroceryDetailTopBar(
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
@@ -130,10 +151,20 @@ fun GroceryDetailForm(
     onToggleItemChecked: (Long, Boolean) -> Unit,
 ) {
     val isInteractionEnabled = !ui.isNavigating && !ui.isLoadingData
+    val checkedCount = ui.groceryItems.count { it.isChecked }
+    val totalCount = ui.groceryItems.size
+    // UI-only sort: false (unchecked) sorts before true (checked); Kotlin sortedBy is stable
+    val displayItems = ui.groceryItems.sortedBy { it.isChecked }
+
+    var hidePurchased by rememberSaveable { mutableStateOf(false) }
+    val visibleItems = if (hidePurchased) displayItems.filter { !it.isChecked } else displayItems
+
     Scaffold(
         topBar = {
             GroceryDetailTopBar(
                 isInteractionEnabled = isInteractionEnabled,
+                checkedCount = checkedCount,
+                totalCount = totalCount,
                 onBack = onBack,
                 onEdit = onEdit
             )
@@ -155,51 +186,84 @@ fun GroceryDetailForm(
                     CircularProgressIndicator()
                 }
             } else {
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .padding(padding)
-                        .padding(12.dp)
                         .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item {
-                        Text(ui.title, style = MaterialTheme.typography.headlineSmall)
+                    if (totalCount > 0) {
+                        LinearProgressIndicator(
+                            progress = { checkedCount.toFloat() / totalCount.toFloat() },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
 
-                    item {
-                        Text(ui.updatedAt, style = MaterialTheme.typography.bodySmall)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "Hide purchased",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Switch(
+                            checked = hidePurchased,
+                            onCheckedChange = { hidePurchased = it },
+                        )
                     }
 
-                    if (!ui.description.isNullOrBlank()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         item {
-                            Text(ui.description, style = MaterialTheme.typography.bodyLarge)
+                            Text(ui.title, style = MaterialTheme.typography.headlineSmall)
                         }
-                    }
 
-                    item {
-                        SectionCard(title = "Groceries") {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                ui.groceryItems.forEach { item ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Checkbox(
-                                            checked = item.isChecked,
-                                            onCheckedChange = {
-                                                onToggleItemChecked(
-                                                    item.id,
-                                                    !item.isChecked
-                                                )
-                                            }
-                                        )
-                                        Text(
-                                            text = item.name,
-                                            style = MaterialTheme.typography.bodyLarge
-                                        )
+                        item {
+                            Text(ui.updatedAt, style = MaterialTheme.typography.bodySmall)
+                        }
+
+                        if (!ui.description.isNullOrBlank()) {
+                            item {
+                                Text(ui.description, style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
+
+                        item {
+                            SectionCard(title = "Groceries") {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    visibleItems.forEach { item ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .alpha(if (item.isChecked) 0.5f else 1f),
+                                        ) {
+                                            Checkbox(
+                                                checked = item.isChecked,
+                                                onCheckedChange = {
+                                                    onToggleItemChecked(
+                                                        item.id,
+                                                        !item.isChecked
+                                                    )
+                                                }
+                                            )
+                                            Text(
+                                                text = item.name,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None,
+                                            )
+                                        }
                                     }
                                 }
                             }
