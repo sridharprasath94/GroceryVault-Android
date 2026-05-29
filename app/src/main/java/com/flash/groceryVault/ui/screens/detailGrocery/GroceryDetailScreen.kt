@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Switch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,14 +32,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import MatchMode
+import SuggestionAutoCompleteField
 import com.flash.groceryVault.ui.components.SectionCard
 import kotlinx.coroutines.flow.collectLatest
 
@@ -81,6 +96,7 @@ fun GroceryDetailScreen(
         onBack = vm::requestBack,
         onEdit = vm::requestEdit,
         onToggleItemChecked = vm::toggleChecked,
+        onQuickAdd = vm::quickAddItem,
     )
 }
 
@@ -88,12 +104,25 @@ fun GroceryDetailScreen(
 @Composable
 internal fun GroceryDetailTopBar(
     isInteractionEnabled: Boolean,
+    checkedCount: Int,
+    totalCount: Int,
     onBack: () -> Unit,
     onEdit: () -> Unit,
 ) {
     Box {
         TopAppBar(
-            title = { Text("Grocery List") },
+            title = {
+                Column {
+                    Text("Grocery List")
+                    if (totalCount > 0) {
+                        Text(
+                            "$checkedCount / $totalCount done",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            },
             navigationIcon = {
                 IconButton(onClick = onBack, enabled = isInteractionEnabled) {
                     Icon(
@@ -107,6 +136,7 @@ internal fun GroceryDetailTopBar(
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
@@ -128,12 +158,33 @@ fun GroceryDetailForm(
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onToggleItemChecked: (Long, Boolean) -> Unit,
+    onQuickAdd: (String) -> Unit,
 ) {
     val isInteractionEnabled = !ui.isNavigating && !ui.isLoadingData
+    val checkedCount = ui.groceryItems.count { it.isChecked }
+    val totalCount = ui.groceryItems.size
+    // UI-only sort: unchecked first, newest unchecked at top; stable sort preserves group order
+    val displayItems = remember(ui.groceryItems) {
+        ui.groceryItems
+            .sortedByDescending { it.createdAt }
+            .sortedBy { it.isChecked }
+    }
+
+    var hidePurchased by rememberSaveable { mutableStateOf(false) }
+    // Only recomputes when sort result or toggle changes, not on unrelated recompositions
+    val visibleItems = remember(displayItems, hidePurchased) {
+        if (hidePurchased) displayItems.filter { !it.isChecked } else displayItems
+    }
+
+    var quickAddText by rememberSaveable { mutableStateOf("") }
+    val quickAddFocusRequester = remember { FocusRequester() }
+
     Scaffold(
         topBar = {
             GroceryDetailTopBar(
                 isInteractionEnabled = isInteractionEnabled,
+                checkedCount = checkedCount,
+                totalCount = totalCount,
                 onBack = onBack,
                 onEdit = onEdit
             )
@@ -155,51 +206,128 @@ fun GroceryDetailForm(
                     CircularProgressIndicator()
                 }
             } else {
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .padding(padding)
-                        .padding(12.dp)
                         .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item {
-                        Text(ui.title, style = MaterialTheme.typography.headlineSmall)
+                    if (totalCount > 0) {
+                        LinearProgressIndicator(
+                            progress = { checkedCount.toFloat() / totalCount.toFloat() },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
 
-                    item {
-                        Text(ui.updatedAt, style = MaterialTheme.typography.bodySmall)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "Hide purchased",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Switch(
+                            checked = hidePurchased,
+                            onCheckedChange = { hidePurchased = it },
+                        )
                     }
 
-                    if (!ui.description.isNullOrBlank()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         item {
-                            Text(ui.description, style = MaterialTheme.typography.bodyLarge)
+                            Text(ui.title, style = MaterialTheme.typography.headlineSmall)
                         }
-                    }
 
-                    item {
-                        SectionCard(title = "Groceries") {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                ui.groceryItems.forEach { item ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Checkbox(
-                                            checked = item.isChecked,
-                                            onCheckedChange = {
-                                                onToggleItemChecked(
-                                                    item.id,
-                                                    !item.isChecked
-                                                )
-                                            }
+                        item {
+                            Text(ui.updatedAt, style = MaterialTheme.typography.bodySmall)
+                        }
+
+                        if (!ui.description.isNullOrBlank()) {
+                            item {
+                                Text(ui.description, style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
+
+                        item {
+                            SectionCard(title = "Groceries") {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        SuggestionAutoCompleteField(
+                                            value = quickAddText,
+                                            onValueChange = { quickAddText = it },
+                                            suggestions = ui.suggestions,
+                                            label = "",
+                                            placeholder = "Quick add item...",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .focusRequester(quickAddFocusRequester),
+                                            showDropdownIcon = false,
+                                            matchMode = MatchMode.Contains,
+                                            keyboardActions = KeyboardActions(
+                                                onDone = {
+                                                    onQuickAdd(quickAddText)
+                                                    quickAddText = ""
+                                                    quickAddFocusRequester.requestFocus()
+                                                }
+                                            ),
                                         )
-                                        Text(
-                                            text = item.name,
-                                            style = MaterialTheme.typography.bodyLarge
-                                        )
+                                        IconButton(
+                                            onClick = {
+                                                onQuickAdd(quickAddText)
+                                                quickAddText = ""
+                                                quickAddFocusRequester.requestFocus()
+                                            },
+                                            enabled = quickAddText.isNotBlank(),
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Add item",
+                                                tint = if (quickAddText.isNotBlank()) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                                },
+                                            )
+                                        }
+                                    }
+
+                                    if (visibleItems.isNotEmpty()) {
+                                        HorizontalDivider()
+                                    }
+
+                                    visibleItems.forEach { item ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .alpha(if (item.isChecked) 0.5f else 1f),
+                                        ) {
+                                            Checkbox(
+                                                checked = item.isChecked,
+                                                onCheckedChange = {
+                                                    onToggleItemChecked(
+                                                        item.id,
+                                                        !item.isChecked
+                                                    )
+                                                }
+                                            )
+                                            Text(
+                                                text = item.name,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None,
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -210,4 +338,3 @@ fun GroceryDetailForm(
         }
     }
 }
-

@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flash.groceryVault.data.GroceryItemEntity
 import com.flash.groceryVault.data.GroceryRepository
+import com.flash.groceryVault.data.SuggestionType
+import com.flash.groceryVault.data.SuggestionsRepository
 import com.flash.groceryVault.ui.util.DateFormats
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,12 +31,14 @@ data class GroceryDetailUiState(
     val description: String? = "",
     val updatedAt: String = "",
     val groceryItems: List<GroceryItemEntity> = emptyList(),
+    val suggestions: List<String> = emptyList(),
     val isLoadingData: Boolean = false,
     val isNavigating: Boolean = false,
 )
 
 class GroceryDetailViewModel(
     val groceryRepository: GroceryRepository,
+    private val suggestionsRepository: SuggestionsRepository,
     private val listId: Long,
 ) : ViewModel() {
     private val _ui = MutableStateFlow(GroceryDetailUiState())
@@ -48,6 +52,11 @@ class GroceryDetailViewModel(
     val events: SharedFlow<GroceryDetailEvent> = _events.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            suggestionsRepository.observeAllMerged(SuggestionType.GROCERY_ITEM).collect { list ->
+                _ui.update { it.copy(suggestions = list) }
+            }
+        }
         // Observe grocery data to populate UI state
         viewModelScope.launch {
             groceryRepository.observeListWithItems(listId)
@@ -96,6 +105,19 @@ class GroceryDetailViewModel(
                 // Rollback UI state on failure
                 _ui.update { it.copy(groceryItems = previousItems) }
                 toast("Failed to update item: ${e.message}")
+            }
+        }
+    }
+
+    fun quickAddItem(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+        viewModelScope.launch {
+            try {
+                groceryRepository.addItem(listId = listId, name = trimmed)
+                suggestionsRepository.add(SuggestionType.GROCERY_ITEM, trimmed)
+            } catch (e: Exception) {
+                toast("Failed to add item: ${e.message}")
             }
         }
     }
