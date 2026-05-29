@@ -41,7 +41,7 @@ private fun CreateGroceryFormPreviewWrapper(
             onDescriptionChange = {},
             onItemChange = { _, _ -> },
             onItemRemove = {},
-            onAddItem = {}
+            onQuickAdd = {}
         )
     }
 }
