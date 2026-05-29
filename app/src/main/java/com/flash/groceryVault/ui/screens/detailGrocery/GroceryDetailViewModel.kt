@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 
 sealed interface GroceryDetailEvent {
     data class Toast(val message: String) : GroceryDetailEvent
+    data class ShowUndo(val message: String) : GroceryDetailEvent
     object OnBackClicked : GroceryDetailEvent
     object OnEditClicked : GroceryDetailEvent
 }
@@ -50,6 +51,8 @@ class GroceryDetailViewModel(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val events: SharedFlow<GroceryDetailEvent> = _events.asSharedFlow()
+
+    private var lastRemoved: GroceryItemEntity? = null
 
     init {
         viewModelScope.launch {
@@ -118,6 +121,41 @@ class GroceryDetailViewModel(
                 suggestionsRepository.add(SuggestionType.GROCERY_ITEM, trimmed)
             } catch (e: Exception) {
                 toast("Failed to add item: ${e.message}")
+            }
+        }
+    }
+
+    fun removeItem(item: GroceryItemEntity) {
+        lastRemoved = item
+        viewModelScope.launch {
+            try {
+                groceryRepository.deleteItem(item.id)
+                emitIfAllowed(GroceryDetailEvent.ShowUndo("Removed ${item.name}"))
+            } catch (e: Exception) {
+                lastRemoved = null
+                toast("Failed to remove item: ${e.message}")
+            }
+        }
+    }
+
+    fun undoRemove() {
+        val item = lastRemoved ?: return
+        lastRemoved = null
+        viewModelScope.launch {
+            try {
+                groceryRepository.restoreItem(item)
+            } catch (e: Exception) {
+                toast("Failed to undo: ${e.message}")
+            }
+        }
+    }
+
+    fun uncheckAll() {
+        viewModelScope.launch {
+            try {
+                groceryRepository.uncheckAll(listId)
+            } catch (e: Exception) {
+                toast("Failed to reset items: ${e.message}")
             }
         }
     }

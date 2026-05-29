@@ -48,11 +48,17 @@ interface GroceryDao {
     @Query("DELETE FROM grocery_items WHERE listId = :listId")
     suspend fun deleteItemsForList(listId: Long)
 
+    @Query("DELETE FROM grocery_items WHERE id = :id")
+    suspend fun deleteItem(id: Long)
+
     @Query("SELECT * FROM grocery_items WHERE listId = :listId ORDER BY sortOrder ASC")
     suspend fun getItemsOnce(listId: Long): List<GroceryItemEntity>
 
     @Query("UPDATE grocery_items SET isChecked = :checked, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setItemChecked(id: Long, checked: Boolean, updatedAt: Long)
+
+    @Query("UPDATE grocery_items SET isChecked = 0, updatedAt = :updatedAt WHERE listId = :listId")
+    suspend fun uncheckAllItems(listId: Long, updatedAt: Long)
 
     @Query("SELECT listId FROM grocery_items WHERE id = :itemId LIMIT 1")
     suspend fun getListIdForItem(itemId: Long): Long?
