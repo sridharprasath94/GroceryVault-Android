@@ -3,7 +3,9 @@ package com.flash.groceryVault.ui.components
 import MatchMode
 import SuggestionAutoCompleteField
 import android.content.res.Configuration
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,6 +17,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,7 +32,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flash.groceryVault.ui.theme.GroceryVaultTheme
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GroceryForm(
     padding: PaddingValues,
@@ -70,6 +77,17 @@ fun GroceryForm(
             CircularProgressIndicator()
         }
         return
+    }
+
+    val lastRowBringIntoView = remember { BringIntoViewRequester() }
+    var previousItemCount by remember { mutableIntStateOf(groceryItems.size) }
+
+    // Reveal the newly added row when Quick Add grows the list; skip loads, removes, renames.
+    LaunchedEffect(groceryItems.size) {
+        if (groceryItems.size > previousItemCount) {
+            lastRowBringIntoView.bringIntoView()
+        }
+        previousItemCount = groceryItems.size
     }
 
     Column(
@@ -112,15 +130,23 @@ fun GroceryForm(
             item {
                 SectionCard(title = "Groceries") {
                     groceryItems.forEachIndexed { idx, row ->
-                        GroceryFormField(
-                            index = idx + 1,
-                            groceryItems = row,
-                            suggestions = suggestions,
-                            onChange = { updated ->
-                                onItemChange(idx, updated)
-                            },
-                            onRemove = { onItemRemove(idx) }
-                        )
+                        Box(
+                            modifier = if (idx == groceryItems.lastIndex) {
+                                Modifier.bringIntoViewRequester(lastRowBringIntoView)
+                            } else {
+                                Modifier
+                            }
+                        ) {
+                            GroceryFormField(
+                                index = idx + 1,
+                                groceryItems = row,
+                                suggestions = suggestions,
+                                onChange = { updated ->
+                                    onItemChange(idx, updated)
+                                },
+                                onRemove = { onItemRemove(idx) }
+                            )
+                        }
 
                         if (idx != groceryItems.lastIndex) {
                             Spacer(Modifier.height(12.dp))
