@@ -149,6 +149,28 @@ class GroceryRepository(
         _syncOrigin.tryEmit(SyncOrigin.Local)
     }
 
+    suspend fun deleteItem(itemId: Long) {
+        val now = System.currentTimeMillis()
+        val listId = dao.getListIdForItem(itemId) ?: return
+        dao.deleteItem(itemId)
+        dao.updateListUpdatedAt(listId = listId, updatedAt = now)
+        _syncOrigin.tryEmit(SyncOrigin.Local)
+    }
+
+    suspend fun restoreItem(item: GroceryItemEntity) {
+        val now = System.currentTimeMillis()
+        dao.insertItems(listOf(item.copy(id = 0)))
+        dao.updateListUpdatedAt(listId = item.listId, updatedAt = now)
+        _syncOrigin.tryEmit(SyncOrigin.Local)
+    }
+
+    suspend fun uncheckAll(listId: Long) {
+        val now = System.currentTimeMillis()
+        dao.uncheckAllItems(listId = listId, updatedAt = now)
+        dao.updateListUpdatedAt(listId = listId, updatedAt = now)
+        _syncOrigin.tryEmit(SyncOrigin.Local)
+    }
+
     suspend fun deleteList(listId: Long) {
         val now = System.currentTimeMillis()
         dao.markListDeleted(listId, deletedAt = now, updatedAt = now)
