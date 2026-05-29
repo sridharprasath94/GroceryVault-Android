@@ -4,8 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -14,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,8 +23,6 @@ import com.flash.groceryVault.ui.components.FormTopBar
 import com.flash.groceryVault.ui.components.GroceryForm
 import com.flash.groceryVault.ui.components.GroceryItemFormRow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import rememberAnimatedImeBottomPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,8 +34,6 @@ fun CreateGroceryScreen(
     val ui by vm.ui.collectAsState()
     val context = LocalContext.current
 
-    val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
@@ -79,12 +72,7 @@ fun CreateGroceryScreen(
         onDescriptionChange = vm::updateDescription,
         onItemChange = vm::onGroceryItemChanged,
         onItemRemove = vm::onGroceryItemRemoved,
-        onAddItem = {
-            vm.onAddGroceryItem()
-            scope.launch {
-                listState.animateScrollToItem(ui.groceryItems.lastIndex)
-            }
-        },
+        onQuickAdd = vm::quickAddRow,
     )
 }
 
@@ -98,13 +86,11 @@ fun CreateGroceryForm(
     onDescriptionChange: (String) -> Unit,
     onItemChange: (Int, GroceryItemFormRow) -> Unit,
     onItemRemove: (Int) -> Unit,
-    onAddItem: () -> Unit,
+    onQuickAdd: (String) -> Unit,
 ) {
-    val imePadding = rememberAnimatedImeBottomPadding()
     val isInteractionEnabled = !ui.isNavigating && !ui.isSaving
 
     Scaffold(
-        modifier = Modifier.padding(bottom = imePadding),
         topBar = {
             FormTopBar(
                 title = "New Grocery List",
@@ -127,7 +113,7 @@ fun CreateGroceryForm(
                 suggestions = ui.suggestions,
                 onItemChange = onItemChange,
                 onItemRemove = onItemRemove,
-                onAddItem = onAddItem,
+                onQuickAdd = onQuickAdd,
             )
 
             if (ui.isSaving) {

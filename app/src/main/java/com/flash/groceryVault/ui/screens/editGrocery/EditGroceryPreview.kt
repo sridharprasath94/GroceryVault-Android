@@ -39,7 +39,7 @@ private fun EditGroceryFormPreviewWrapper(
             onDescriptionChange = {},
             onItemChange = { _, _ -> },
             onItemRemove = {},
-            onAddItem = {}
+            onQuickAdd = {}
         )
     }
 }

@@ -100,6 +100,12 @@ class EditGroceryViewModel(
         _ui.update { it.copy(groceryItems = it.groceryItems + GroceryItemFormRow()) }
     }
 
+    fun quickAddRow(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+        _ui.update { it.copy(groceryItems = it.groceryItems + GroceryItemFormRow(name = trimmed)) }
+    }
+
     fun onGroceryItemChanged(index: Int, row: GroceryItemFormRow) {
         _ui.update { state ->
             val list = state.groceryItems.toMutableList()
